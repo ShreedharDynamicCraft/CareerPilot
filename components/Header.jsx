@@ -23,7 +23,7 @@ import Image from "next/image";
 import { checkUser } from "@/lib/checkUser";
 
 export default async function Header() {
-   checkUser();
+  await  checkUser();
 
   return (
     <header className="fixed top-0 w-full border-b bg-background/80 backdrop-blur-md z-50 shadow-md">
@@ -31,7 +31,7 @@ export default async function Header() {
         <Link href="/">
           <Image
             src={"/logo.png"}
-            alt="Sensai Logo"
+            alt="CareerPilot"
             width={200}
             height={60}
             className="h-12 py-1 w-auto object-contain transition-transform hover:scale-105"
