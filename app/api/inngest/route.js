@@ -1,11 +1,12 @@
-// import { helloWorld } from "@/lib/inngest/functions";
-import { inngest } from "@/lib/inngest/client";
-
 import { serve } from "inngest/next";
+import { inngest, generateInsightsFunction } from "@/lib/inngest";
 
-// Create an API that serves zero functions
-export const { GET, POST, PUT } = serve({
+// Create a Next.js API route handler with specific configuration
+export const { GET, POST } = serve({
   client: inngest,
-  functions: [generateIndustryInsights],
-
+  functions: [generateInsightsFunction],
+  serving: {
+    streaming: true,
+    maxResponseSize: '5mb'
+  }
 });

@@ -11,7 +11,7 @@ const CoverLetterPreview = ({ content }) => {
     navigator.clipboard.writeText(content)
       .then(() => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 3000); // Reset copied state after 3s
+        setTimeout(() => setCopied(false), 3000); // Reset copied state after s
       })
       .catch((error) => console.error("Failed to copy text:", error));
   };

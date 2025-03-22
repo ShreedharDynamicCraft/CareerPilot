@@ -58,18 +58,38 @@ export default async function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60 shadow-lg rounded-lg border bg-white">
-                <DropdownMenuItem asChild>
-                  <Link href="/career-advice" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <BarChart className="h-4 w-4" />
-                    AI Career Guidance Chatbot
+              
+              <DropdownMenuItem asChild>
+                  <Link href="/resume" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
+                    <FileText className="h-4 w-4" />
+                    Build Resume
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/ai-cover-letter" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
+                    <PenBox className="h-4 w-4" />
+                    Cover Letter
+                  </Link>
+                </DropdownMenuItem>
+             
+
+
                 <DropdownMenuItem asChild>
                   <Link href="/resume-analysis" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
                     <FileText className="h-4 w-4" />
                     Resume Analysis
                   </Link>
                 </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link href="/interview" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
+                    <GraduationCap className="h-4 w-4" />
+                    Interview Prep
+                  </Link>
+                </DropdownMenuItem>
+
+
+
                 <DropdownMenuItem asChild>
                   <Link href="/job-search" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
                     <Search className="h-4 w-4" />
@@ -101,24 +121,17 @@ export default async function Header() {
                   </Link>
                 </DropdownMenuItem> */}
                 {/* Growth Tools Items Merged Here */}
+     
+
                 <DropdownMenuItem asChild>
-                  <Link href="/resume" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <FileText className="h-4 w-4" />
-                    Build Resume
+                  <Link href="/career-advice" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
+                    <BarChart className="h-4 w-4" />
+                    AI Career Guidance Chatbot
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/ai-cover-letter" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <PenBox className="h-4 w-4" />
-                    Cover Letter
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/interview" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <GraduationCap className="h-4 w-4" />
-                    Interview Prep
-                  </Link>
-                </DropdownMenuItem>
+
+
+
               </DropdownMenuContent>
             </DropdownMenu>
           </SignedIn>
