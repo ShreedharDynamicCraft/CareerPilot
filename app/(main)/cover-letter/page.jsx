@@ -24,7 +24,7 @@ export default async function CoverLetterPage() {
             </p>
           </div>
 
-          <Link href="/ai-cover-letter/new">
+          <Link href="/cover-letter/new">
             <Button
               size="lg"
               className="bg-gradient-to-r from-primary to-purple-600 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
@@ -46,7 +46,7 @@ export default async function CoverLetterPage() {
             <p className="text-muted-foreground mb-6 max-w-md">
               Start by creating a personalized cover letter to showcase your skills and experience.
             </p>
-            <Link href="/ai-cover-letter/new">
+            <Link href="/cover-letter/new">
               <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="h-5 w-5 mr-2" />
                 Create Your First Cover Letter

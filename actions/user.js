@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { generateAIInsights } from "./dashboard";
 
@@ -10,7 +10,7 @@ export async function updateUser(data) {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -71,21 +71,28 @@ export async function getUserOnboardingStatus() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) throw new Error("User not found");
-
   try {
-    const user = await db.user.findUnique({
-      where: {
-        clerkUserId: userId,
-      },
-      select: {
-        industry: true,
-      },
+    let user = await db.user.findUnique({
+      where: { clerkId: userId },
     });
+
+    if (!user) {
+      const clerkUser = await clerkClient.users.getUser(userId);
+      
+      try {
+        user = await db.user.create({
+          data: {
+            clerkId: userId,
+            email: clerkUser.emailAddresses[0]?.emailAddress || '',
+            name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+            onboardingCompleted: false,
+          },
+        });
+      } catch (error) {
+        console.error("Error creating user:", error);
+        throw new Error("Failed to create user");
+      }
+    }
 
     return {
       isOnboarded: !!user?.industry,

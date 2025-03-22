@@ -59,7 +59,7 @@ export async function generateCoverLetter(data) {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId }, // Changed from clerkUserId to clerkId
   });
   if (!user) throw new Error("User not found");
 
@@ -176,7 +176,7 @@ export async function getCoverLetters() {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId }, // Changed from clerkUserId to clerkId
   });
   if (!user) throw new Error("User not found");
 
@@ -191,7 +191,7 @@ export async function getCoverLetter(id) {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId }, // Changed from clerkUserId to clerkId
   });
   if (!user) throw new Error("User not found");
 
@@ -205,7 +205,7 @@ export async function deleteCoverLetter(id) {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId }, // Changed from clerkUserId to clerkId
   });
   if (!user) throw new Error("User not found");
 
@@ -220,7 +220,7 @@ export async function deleteAllCoverLetters() {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId }, // Changed from clerkUserId to clerkId
   });
   if (!user) throw new Error("User not found");
 

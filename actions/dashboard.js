@@ -57,7 +57,7 @@ export async function getIndustryInsights() {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId },
     include: {
       industryInsight: true,
     },
@@ -126,7 +126,7 @@ export async function getLocationSpecificInsights(location) {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId },
     include: {
       industryInsight: true,
     },
@@ -152,7 +152,7 @@ export async function downloadInsightsReport(format = "csv") {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkId: userId },
     include: {
       industryInsight: true,
     },

@@ -127,7 +127,7 @@ export default function CoverLetterList({ coverLetters }) {
                   variant="outline"
                   size="icon"
                   className="rounded-full border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  onClick={() => router.push(`/ai-cover-letter/${letter.id}`)}
+                  onClick={() => router.push(`/cover-letter/${letter.id}`)}
                 >
                   <Eye className="h-4 w-4 text-primary" />
                 </Button>

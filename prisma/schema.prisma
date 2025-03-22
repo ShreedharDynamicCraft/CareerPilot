@@ -8,10 +8,11 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  clerkUserId   String    @unique // clerk user id
-  email         String    @unique
-  name          String?
+  id                 String    @id @default(cuid())
+  clerkId           String    @unique    // Single Clerk ID field
+  email             String    @unique
+  name              String
+  onboardingCompleted Boolean @default(false)
   imageUrl      String?
   industry      String?    // Combined industry-subindustry (e.g., "tech-software-development")
   industryInsight IndustryInsight? @relation(fields: [industry], references: [industry])

@@ -8,7 +8,7 @@ export default function NewCoverLetterPage() {
     <div className="container mx-auto pt-20 px-4 max-w-4xl min-h-screen">
       {/* Header Section */}
       <div className="mb-8">
-        <Link href="/ai-cover-letter">
+        <Link href="/cover-letter">
           <Button
             variant="ghost"
             className="gap-2 pl-0 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
