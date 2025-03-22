@@ -25,4 +25,4 @@ const useFetch = (cb) => {
   return { data, loading, error, fn, setData };
 };
 
-export default useFetch;
+export default useFetch; // this is used for fetching data from the server like the user's data, etc.

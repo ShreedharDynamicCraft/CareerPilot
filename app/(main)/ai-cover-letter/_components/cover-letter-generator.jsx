@@ -115,14 +115,18 @@ export default function CoverLetterGenerator() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={generating}>
+              <Button 
+                type="submit" 
+                disabled={generating} 
+                className="px-5 py-2 text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 ease-in-out"
+              >
                 {generating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Generating...
                   </>
                 ) : (
-                  "Generate Cover Letter"
+                  "🚀 Generate Cover Letter"
                 )}
               </Button>
             </div>

@@ -61,7 +61,7 @@ export default async function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/career-advice" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
                     <BarChart className="h-4 w-4" />
-                    AI Career Guidance
+                    AI Career Guidance Chatbot
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -76,30 +76,30 @@ export default async function Header() {
                     Smart Job Search
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                {/* <DropdownMenuItem asChild>
                   <Link href="/skill-up" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
                     <GraduationCap className="h-4 w-4" />
                     Skill Up for Promotion
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                </DropdownMenuItem> */}
+                {/* <DropdownMenuItem asChild>
                   <Link href="/networking" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
                     <Users className="h-4 w-4" />
                     Networking Assistant
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                </DropdownMenuItem> */}
+                {/* <DropdownMenuItem asChild>
                   <Link href="/freelance-jobs" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
                     <Briefcase className="h-4 w-4" />
                     Freelance & Remote Jobs
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                </DropdownMenuItem> */}
+                {/* <DropdownMenuItem asChild>
                   <Link href="/internship-finder" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
                     <GraduationCap className="h-4 w-4" />
                     Internship Finder
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 {/* Growth Tools Items Merged Here */}
                 <DropdownMenuItem asChild>
                   <Link href="/resume" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">

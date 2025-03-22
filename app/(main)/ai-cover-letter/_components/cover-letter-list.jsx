@@ -83,7 +83,7 @@ export default function CoverLetterList({ coverLetters }) {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Cover Letter?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
+                       This will permanently
                         delete your cover letter for {letter.jobTitle} at{" "}
                         {letter.companyName}.
                       </AlertDialogDescription>

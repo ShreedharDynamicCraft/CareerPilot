@@ -19,10 +19,13 @@ export async function generateCoverLetter(data) {
 
   const prompt = `
     Write a professional cover letter for a ${data.jobTitle} position at ${
-    data.companyName
+    data.companyName 
   }.
     
     About the candidate:
+    - Name: ${user.name}
+    - Email: ${user.email}
+    - Date: ${new Date().toLocaleDateString()}
     - Industry: ${user.industry}
     - Years of Experience: ${user.experience}
     - Skills: ${user.skills?.join(", ")}

@@ -169,3 +169,4 @@ export async function downloadInsightsReport(format = "csv") {
     message: `Industry insights report generated in ${format} format`,
   };
 }
+
