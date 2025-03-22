@@ -102,3 +102,45 @@ export async function getUserOnboardingStatus() {
     throw new Error("Failed to check onboarding status");
   }
 }
+
+
+
+
+export async function getUser() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+ 
+try {
+const user = await db.user.findUnique({
+where: { clerkId: userId },
+select : {
+  id: true,
+  name: true,
+  email: true,
+  industry: true,
+  experience: true,
+  skills: true,
+  bio: true,
+  onboardingCompleted: true,
+
+}
+});
+
+if (!user) {
+  const clerkUser = await clerkClient.users.getUser(userId);
+  return {
+    onboardingCompleted: false,
+    name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+    email: clerkUser.emailAddresses[0]?.emailAddress,
+    imageUrl: clerkUser.imageUrl
+  };
+}
+
+return user;
+} catch (error) {
+console.error("Error fetching user:", error);
+throw new Error("Failed to fetch user data");
+}
+}
+

@@ -12,6 +12,8 @@ import {
   Users,
   BarChart,
   TrendingUp,
+  UserCircle,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -105,7 +107,40 @@ export default async function Header() {
   </Button>
 </Link>
 
-
+{/* Career Profile Button */}
+<Link href="/onboarding" className="relative group">
+  <Button 
+    variant="outline" 
+    className="hidden md:flex items-center gap-2 px-4 py-2 
+      bg-gradient-to-r from-purple-50 to-pink-50 
+      hover:from-purple-100 hover:to-pink-100 
+      border-2 border-transparent hover:border-purple-200 
+      transition-all duration-300 shadow-sm hover:shadow-md
+      group relative overflow-hidden"
+  >
+    <div className="flex items-center gap-2">
+      <div className="relative">
+        <UserCircle className="h-4 w-4 text-purple-600 
+          transition-transform duration-200 group-hover:-translate-y-5" />
+        <Settings className="h-4 w-4 text-pink-600 absolute 
+          top-0 left-0 translate-y-5 group-hover:translate-y-0 
+          transition-transform duration-200" />
+      </div>
+      <span className="font-medium bg-gradient-to-r from-purple-600 
+        to-pink-600 bg-clip-text text-transparent">
+        Career Profile
+      </span>
+      <ChevronRight className="h-4 w-4 text-purple-600 
+        transform transition-transform duration-200 
+        group-hover:translate-x-1" />
+    </div>
+    
+    {/* Hover Effect Background */}
+    <div className="absolute inset-0 bg-gradient-to-r from-purple-100/50 
+      to-pink-100/50 opacity-0 group-hover:opacity-100 
+      transition-opacity duration-300"></div>
+  </Button>
+</Link>
 
 
             {/* CareerPilot Dropdown */}
