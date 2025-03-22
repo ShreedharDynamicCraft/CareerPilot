@@ -23,12 +23,9 @@ import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
-// import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
-
 import dynamic from "next/dynamic";
 
 const html2pdf = dynamic(() => import("html2pdf.js"), { ssr: false });
-
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -51,6 +48,8 @@ export default function ResumeBuilder({ initialContent }) {
       experience: [],
       education: [],
       projects: [],
+      achievements: "",
+      languages: "",
     },
   });
 
@@ -102,7 +101,7 @@ export default function ResumeBuilder({ initialContent }) {
   };
 
   const getCombinedContent = () => {
-    const { summary, skills, experience, education, projects } = formValues;
+    const { summary, skills, experience, education, projects, achievements, languages } = formValues;
     return [
       getContactMarkdown(),
       summary && `## Professional Summary\n\n${summary}`,
@@ -110,6 +109,8 @@ export default function ResumeBuilder({ initialContent }) {
       entriesToMarkdown(experience, "Work Experience"),
       entriesToMarkdown(education, "Education"),
       entriesToMarkdown(projects, "Projects"),
+      achievements && `## Achievements & Certifications\n\n${achievements}`,
+      languages && `## Languages Known\n\n${languages}`,
     ]
       .filter(Boolean)
       .join("\n\n");
@@ -154,43 +155,48 @@ export default function ResumeBuilder({ initialContent }) {
 
   return (
     <div data-color-mode="light" className="space-y-4">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-2">
-        <h1 className="font-bold gradient-title text-5xl md:text-6xl">
-          Resume Builder
-        </h1>
-        <div className="space-x-2">
-          <Button
-            variant="destructive"
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Save
-              </>
-            )}
-          </Button>
-          <Button onClick={generatePDF} disabled={isGenerating}>
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4" />
-                Download PDF
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-gradient-to-r from-slate-50 to-gray-100 p-6 rounded-xl shadow-lg">
+  <h1 className="font-bold text-5xl md:text-6xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm hover:scale-105 transition-transform duration-300">
+    Resume Builder
+  </h1>
+  <div className="flex gap-3">
+    <Button
+      variant="destructive"
+      onClick={handleSubmit(onSubmit)}
+      disabled={isSaving}
+      className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-70 disabled:hover:scale-100"
+    >
+      {isSaving ? (
+        <>
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          <span className="font-medium">Saving...</span>
+        </>
+      ) : (
+        <>
+          <Save className="mr-2 h-5 w-5" />
+          <span className="font-medium">Save Resume</span>
+        </>
+      )}
+    </Button>
+    <Button
+      onClick={generatePDF}
+      disabled={isGenerating}
+      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-70 disabled:hover:scale-100"
+    >
+      {isGenerating ? (
+        <>
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          <span className="font-medium">Generating...</span>
+        </>
+      ) : (
+        <>
+          <Download className="mr-2 h-5 w-5" />
+          <span className="font-medium">Download PDF</span>
+        </>
+      )}
+    </Button>
+  </div>
+</div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -363,6 +369,39 @@ export default function ResumeBuilder({ initialContent }) {
                   {errors.projects.message}
                 </p>
               )}
+            </div>
+
+            {/* Additional Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Additional Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Controller
+                  name="achievements"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Achievements & Certifications</label>
+                      <Textarea
+                        {...field}
+                        placeholder="List your achievements, awards, and certifications..."
+                      />
+                    </div>
+                  )}
+                />
+                <Controller
+                  name="languages"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Languages Known</label>
+                      <Input
+                        {...field}
+                        placeholder="English, Hindi, Marathi, etc."
+                      />
+                    </div>
+                  )}
+                />
+              </div>
             </div>
           </form>
         </TabsContent>
