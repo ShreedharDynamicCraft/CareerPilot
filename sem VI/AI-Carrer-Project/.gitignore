@@ -1,0 +1,16 @@
+# macOS specific
+.DS_Store
+
+# Ignore files in parent directories if not intended
+../../*
+!./*  # But keep files in the current folder
+
+# Or ignore specific directories if needed
+.android/
+.bash_history
+.bash_profile
+.cache/
+.gitconfig
+.npm/
+.env
+# ... add any other directories/files you want to ignore
