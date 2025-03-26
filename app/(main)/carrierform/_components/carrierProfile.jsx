@@ -38,7 +38,7 @@ import { onboardingSchema } from "@/app/lib/schema";
 
 import { updateUser, getUser } from "@/actions/user";
 
-export default function OnboardingForm({ industries }) {
+export default function CarrierProfile({ industries }) {
   const router = useRouter();
   const [selectedIndustry, setSelectedIndustry] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -108,7 +108,7 @@ export default function OnboardingForm({ industries }) {
           reset({
             industry: industryId || "",
             subIndustry: subIndustry || "",
-            experience: user.experience || "",
+            experience: user.experience || 0, // Changed from "" to 0
             skills: user.skills || "",
             bio: user.bio || "",
           });
@@ -123,8 +123,8 @@ export default function OnboardingForm({ industries }) {
             );
           }
 
-          // Set editing state based on whether profile was completed before
-          setIsEditing(user.onboardingCompleted);
+          // Flip the logic - if onboardingCompleted is false, profile is editable
+          setIsEditing(!user.onboardingCompleted);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -199,9 +199,9 @@ export default function OnboardingForm({ industries }) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center bg-gradient-to-b from-background to-secondary/10 min-h-screen py-10 px-4">
+    <div className="flex flex-col items-center justify-center bg-gradient-to-b from-background to-secondary/10 min-h-screen py-5 px-4"> 
       {/* Profile status message */}
-      {isEditing && (
+      {!isEditing && (
         <div className="w-full max-w-lg mb-6 p-4 border border-primary/30 rounded-md bg-primary/5 text-foreground">
           <div className="flex items-start gap-3">
             <CheckCircle className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
@@ -241,10 +241,10 @@ export default function OnboardingForm({ industries }) {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="pt-6 pb-4">
-          <form id="profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <CardContent className="pt-1 pb-1"> 
+          <form id="profile-form" onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             {/* Industry Selection */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Label htmlFor="industry" className="text-base">Industry</Label>
                 <TooltipProvider>
@@ -360,7 +360,7 @@ export default function OnboardingForm({ industries }) {
                 placeholder="E.g., 5"
                 className="border-border/60 hover:border-primary/60 focus:border-primary focus-visible:ring-primary transition-colors"
                 {...register("experience", {
-                  setValueAs: (value) => value === "" ? "" : parseInt(value, 10)
+                  valueAsNumber: true, // Add this to ensure number conversion
                 })}
               />
               {errors.experience && (

@@ -108,7 +108,7 @@ export default async function Header() {
 </Link>
 
 {/* Career Profile Button */}
-<Link href="/onboarding" className="relative group">
+<Link href="/carrierform" className="relative group">
   <Button 
     variant="outline" 
     className="hidden md:flex items-center gap-2 px-4 py-2 
