@@ -1,0 +1,45 @@
+/* Markdown Editor Overrides */
+.w-md-editor {
+  background-color: white !important;
+}
+
+.w-md-editor-text-pre,
+.w-md-editor-text-input,
+.w-md-editor-text {
+  background-color: white !important;
+}
+
+.wmde-markdown-var {
+  background-color: white !important;
+  color: black !important;
+}
+
+.wmde-markdown {
+  background-color: white !important;
+}
+
+/* PDF Styles */
+.pdf-container {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* PDF Generation Styles */
+.pdf-container {
+  background-color: white !important;
+  color: black !important;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 20mm;
+}
+
+/* Improve Button Styles */
+.improve-button {
+  background: linear-gradient(135deg, #e0f2fe 0%, #ede9fe 100%);
+  transition: all 0.2s ease-in-out;
+}
+
+.improve-button:hover {
+  background: linear-gradient(135deg, #bae6fd 0%, #ddd6fe 100%);
+  transform: translateY(-1px);
+}
