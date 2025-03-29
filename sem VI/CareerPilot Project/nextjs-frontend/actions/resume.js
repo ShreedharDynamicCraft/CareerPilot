@@ -4,13 +4,20 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
+import { resumeSchema } from "@/app/lib/schema";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-export async function saveResume(content) {
+export async function saveResume(content, structuredData) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
+
+  // Validate structured data
+  const validation = resumeSchema.safeParse(structuredData);
+  if (!validation.success) {
+    throw new Error("Invalid resume data structure");
+  }
 
   const user = await db.user.findUnique({
     where: { clerkId: userId },
@@ -25,10 +32,12 @@ export async function saveResume(content) {
       },
       update: {
         content,
+        structuredData: validation.data, // Use validated data
       },
       create: {
         userId: user.id,
         content,
+        structuredData: validation.data, // Use validated data
       },
     });
 
@@ -50,12 +59,34 @@ export async function getResume() {
 
   if (!user) throw new Error("User not found");
 
-  return await db.resume.findUnique({
+  const resume = await db.resume.findUnique({
     where: {
       userId: user.id,
     },
   });
+
+  if (!resume) return null;
+
+  // Validate the structured data when retrieving
+  if (resume.structuredData) {
+    const validation = resumeSchema.safeParse(resume.structuredData);
+    if (!validation.success) {
+      console.error("Invalid resume data structure:", validation.error);
+      return {
+        ...resume,
+        structuredData: null,
+      };
+    }
+    return {
+      ...resume,
+      structuredData: validation.data,
+    };
+  }
+
+  return resume;
 }
+
+// ... keep the existing improveWithAI function
 
 export async function improveWithAI({ current, type }) {
   const { userId } = await auth();
