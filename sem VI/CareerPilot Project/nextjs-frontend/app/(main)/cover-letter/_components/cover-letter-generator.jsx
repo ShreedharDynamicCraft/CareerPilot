@@ -57,7 +57,7 @@ export default function CoverLetterGenerator() {
   useEffect(() => {
     if (generatedLetter) {
       toast.success("Cover letter generated successfully!");
-      router.push(`/ai-cover-letter/${generatedLetter.id}`);
+      router.push(`/cover-letter/${generatedLetter.id}`);
       reset();
       setResumeFile(null);
       setDescriptionSource("manual");

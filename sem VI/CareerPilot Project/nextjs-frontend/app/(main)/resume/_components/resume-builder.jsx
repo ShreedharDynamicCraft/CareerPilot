@@ -31,6 +31,7 @@ const RESUME_SECTIONS = [
   "achievements",
   "languages"
 ];
+import { downloadResumePDF } from '@/actions/resume';
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -237,70 +238,128 @@ export default function ResumeBuilder({ initialContent }) {
     ].filter(Boolean).join('\n\n');
   }, [formValues, getContactMarkdown, formatSkills, formatExperience, formatEducation, formatProject]);
 
+
   const generatePDF = async () => {
     if (!isClient) return;
-    
+  
     setIsGenerating(true);
     try {
-      const element = document.getElementById("resume-pdf");
-      if (!element) {
-        throw new Error("Resume content not found");
-      }
+      // Create a complete HTML document with proper styling
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${user?.fullName || 'Resume'}</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                font-size: 11pt;
+                line-height: 1.5;
+                color: #333;
+                padding: 0;
+                margin: 0;
+              }
+              h1 {
+                font-size: 16pt;
+                margin: 15pt 0 10pt 0;
+                color: #2c3e50;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 5pt;
+              }
+              h2 {
+                font-size: 14pt;
+                margin: 12pt 0 8pt 0;
+                color: #34495e;
+              }
+              h3 {
+                font-size: 12pt;
+                margin: 10pt 0 6pt 0;
+                color: #7f8c8d;
+              }
+              strong {
+                font-weight: bold;
+              }
+              em {
+                font-style: italic;
+              }
+              a {
+                color: #3498db;
+                text-decoration: none;
+              }
+              ul, ol {
+                margin: 8pt 0 8pt 15pt;
+                padding: 0;
+              }
+              li {
+                margin: 4pt 0;
+              }
+              .center {
+                text-align: center;
+              }
+              .header {
+                margin-bottom: 15pt;
+              }
+              .contact-info {
+                margin: 5pt 0;
+                font-size: 10pt;
+              }
+              .section {
+                margin-bottom: 15pt;
+              }
+              .job-title, .degree {
+                font-weight: bold;
+              }
+              .company, .school {
+                font-style: italic;
+              }
+              .date {
+                color: #7f8c8d;
+                font-size: 10pt;
+              }
+            </style>
+          </head>
+          <body>
+            ${previewContent
+              // Convert markdown to HTML with proper structure
+              .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+              .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+              .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/\*(.*?)\*/g, '<em>$1</em>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+              .replace(/^\s*-\s(.*$)/gm, '<li>$1</li>')
+              .replace(/<div align="center">(.*?)<\/div>/g, '<div class="center">$1</div>')
+              // Additional formatting for better structure
+              .replace(/### (.*?)\n\*(.*?)\*/g, '<h3 class="job-title">$1</h3><p class="company">$2</p>')
+              .replace(/(\d{4} - \d{4}|Present)/g, '<span class="date">$1</span>')
+            }
+          </body>
+        </html>
+      `;
   
-      // Create a clone of the element to modify styles
-      const clone = element.cloneNode(true);
-      document.body.appendChild(clone);
+      const pdfBuffer = await downloadResumePDF(htmlContent);
       
-      // Replace unsupported color functions
-      const elementsWithOklch = clone.querySelectorAll('*');
-      elementsWithOklch.forEach(el => {
-        const styles = window.getComputedStyle(el);
-        if (styles.color.includes('oklch')) {
-          el.style.color = '#000000'; // Fallback to black
-        }
-        if (styles.backgroundColor.includes('oklch')) {
-          el.style.backgroundColor = '#ffffff'; // Fallback to white
-        }
-      });
+      // Create and trigger download
+      const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${user?.fullName || 'resume'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
   
-      // Dynamically import html2pdf.js
-      const html2pdf = (await import("html2pdf.js")).default;
-      
-      const opt = {
-        margin: [15, 15],
-        filename: `${user?.fullName || 'resume'}_${new Date().toISOString().slice(0, 10)}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          logging: true,
-          useCORS: true,
-          allowTaint: true,
-          ignoreElements: (element) => {
-            // Ignore elements with unsupported styles
-            const styles = window.getComputedStyle(element);
-            return styles.color.includes('oklch') || 
-                   styles.backgroundColor.includes('oklch');
-          }
-        },
-        jsPDF: { 
-          unit: "mm", 
-          format: "a4", 
-          orientation: "portrait" 
-        }
-      };
-  
-      await html2pdf().set(opt).from(clone).save();
-      document.body.removeChild(clone);
-      toast.success("PDF downloaded successfully!");
+      toast.success('PDF downloaded successfully!');
     } catch (error) {
-      console.error("PDF generation error:", error);
-      toast.error("Failed to generate PDF. Please try again.");
+      console.error('PDF generation error:', error);
+      toast.error(`Failed to generate PDF: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  
   const onSubmit = async (data) => {
     try {
       const formattedContent = getCombinedContent();
@@ -744,23 +803,9 @@ export default function ResumeBuilder({ initialContent }) {
               preview={resumeMode}
             />
           </div>
-          <div className="hidden">
-            <div id="resume-pdf">
-              <MDEditor.Markdown
-                source={previewContent}
-                style={{
-                  background: "white",
-                  color: "black",
-                  padding: "20px",
-                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                  lineHeight: 1.5,
-                }}
-              />
-            </div>
-          </div>
         </TabsContent>
       </Tabs>
-)}
+      )}
     </div>
   );
 }

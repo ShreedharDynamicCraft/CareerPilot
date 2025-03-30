@@ -6,6 +6,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
 import { resumeSchema } from "@/app/lib/schema";
 
+import { generatePDF } from './generate-pdf';
+
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -127,3 +130,20 @@ export async function improveWithAI({ current, type }) {
     throw new Error("Failed to improve content");
   }
 }
+
+// actions/resume.js
+
+// Your existing saveResume and getResume functions...
+// actions/resume.js
+
+// Your existing saveResume and getResume functions...
+
+export const downloadResumePDF = async (htmlContent) => {
+  try {
+    const pdfBuffer = await generatePDF(htmlContent);
+    return pdfBuffer;
+  } catch (error) {
+    console.error('Error in downloadResumePDF:', error);
+    throw error;
+  }
+};
