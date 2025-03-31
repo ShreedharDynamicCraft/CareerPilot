@@ -12,14 +12,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { EntryForm } from "./form";
-import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { resumeSchema } from "@/app/lib/schema";
-import dynamic from "next/dynamic";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { saveResume, getResume } from "@/actions/resume";
+import { saveResume, getResume, improveWithAI, downloadResumePDF } from "@/actions/resume";
+import useFetch from "@/hooks/use-fetch";
 
 const RESUME_SECTIONS = [
   "contact",
@@ -31,7 +30,6 @@ const RESUME_SECTIONS = [
   "achievements",
   "languages"
 ];
-import { downloadResumePDF } from '@/actions/resume';
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -41,10 +39,9 @@ export default function ResumeBuilder({ initialContent }) {
   const [currentSection, setCurrentSection] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [completionProgress, setCompletionProgress] = useState(0);
+  const [isClient, setIsClient] = useState(false);
 
   const { resumeData, saveResumeData } = useResumeData();
-
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -56,7 +53,6 @@ export default function ResumeBuilder({ initialContent }) {
     handleSubmit,
     watch,
     formState: { errors, isDirty },
-    trigger,
     getValues,
     setValue,
     reset,
@@ -65,11 +61,16 @@ export default function ResumeBuilder({ initialContent }) {
     defaultValues: resumeData,
   });
 
+  // Fetch hooks for server actions
+  const { loading: isSaving, fn: saveResumeFn, error: saveError, data: saveResult } = useFetch(saveResume);
+  const { loading: isEnhancing, fn: enhanceWithAI, error: enhanceError } = useFetch(improveWithAI);
+  const { loading: isLoadingResume, fn: loadResumeFn } = useFetch(getResume);
+
   // Load initial data from database
   useEffect(() => {
     const loadResumeData = async () => {
       try {
-        const resume = await getResume();
+        const resume = await loadResumeFn();
         if (resume?.structuredData) {
           reset(JSON.parse(resume.structuredData));
           setPreviewContent(resume.content);
@@ -79,14 +80,7 @@ export default function ResumeBuilder({ initialContent }) {
       }
     };
     loadResumeData();
-  }, [reset]);
-
-  const {
-    loading: isSaving,
-    fn: saveResumeFn,
-    data: saveResult,
-    error: saveError,
-  } = useFetch(saveResume);
+  }, [reset, loadResumeFn]);
 
   const formValues = watch();
 
@@ -238,13 +232,11 @@ export default function ResumeBuilder({ initialContent }) {
     ].filter(Boolean).join('\n\n');
   }, [formValues, getContactMarkdown, formatSkills, formatExperience, formatEducation, formatProject]);
 
-
   const generatePDF = async () => {
     if (!isClient) return;
   
     setIsGenerating(true);
     try {
-      // Create a complete HTML document with proper styling
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -252,76 +244,26 @@ export default function ResumeBuilder({ initialContent }) {
             <meta charset="UTF-8">
             <title>${user?.fullName || 'Resume'}</title>
             <style>
-              body {
-                font-family: Arial, sans-serif;
-                font-size: 11pt;
-                line-height: 1.5;
-                color: #333;
-                padding: 0;
-                margin: 0;
-              }
-              h1 {
-                font-size: 16pt;
-                margin: 15pt 0 10pt 0;
-                color: #2c3e50;
-                border-bottom: 1px solid #eee;
-                padding-bottom: 5pt;
-              }
-              h2 {
-                font-size: 14pt;
-                margin: 12pt 0 8pt 0;
-                color: #34495e;
-              }
-              h3 {
-                font-size: 12pt;
-                margin: 10pt 0 6pt 0;
-                color: #7f8c8d;
-              }
-              strong {
-                font-weight: bold;
-              }
-              em {
-                font-style: italic;
-              }
-              a {
-                color: #3498db;
-                text-decoration: none;
-              }
-              ul, ol {
-                margin: 8pt 0 8pt 15pt;
-                padding: 0;
-              }
-              li {
-                margin: 4pt 0;
-              }
-              .center {
-                text-align: center;
-              }
-              .header {
-                margin-bottom: 15pt;
-              }
-              .contact-info {
-                margin: 5pt 0;
-                font-size: 10pt;
-              }
-              .section {
-                margin-bottom: 15pt;
-              }
-              .job-title, .degree {
-                font-weight: bold;
-              }
-              .company, .school {
-                font-style: italic;
-              }
-              .date {
-                color: #7f8c8d;
-                font-size: 10pt;
-              }
+              body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 0; margin: 0; }
+              h1 { font-size: 16pt; margin: 15pt 0 10pt 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5pt; }
+              h2 { font-size: 14pt; margin: 12pt 0 8pt 0; color: #34495e; }
+              h3 { font-size: 12pt; margin: 10pt 0 6pt 0; color: #7f8c8d; }
+              strong { font-weight: bold; }
+              em { font-style: italic; }
+              a { color: #3498db; text-decoration: none; }
+              ul, ol { margin: 8pt 0 8pt 15pt; padding: 0; }
+              li { margin: 4pt 0; }
+              .center { text-align: center; }
+              .header { margin-bottom: 15pt; }
+              .contact-info { margin: 5pt 0; font-size: 10pt; }
+              .section { margin-bottom: 15pt; }
+              .job-title, .degree { font-weight: bold; }
+              .company, .school { font-style: italic; }
+              .date { color: #7f8c8d; font-size: 10pt; }
             </style>
           </head>
           <body>
             ${previewContent
-              // Convert markdown to HTML with proper structure
               .replace(/^# (.*$)/gm, '<h1>$1</h1>')
               .replace(/^## (.*$)/gm, '<h2>$1</h2>')
               .replace(/^### (.*$)/gm, '<h3>$1</h3>')
@@ -330,7 +272,6 @@ export default function ResumeBuilder({ initialContent }) {
               .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
               .replace(/^\s*-\s(.*$)/gm, '<li>$1</li>')
               .replace(/<div align="center">(.*?)<\/div>/g, '<div class="center">$1</div>')
-              // Additional formatting for better structure
               .replace(/### (.*?)\n\*(.*?)\*/g, '<h3 class="job-title">$1</h3><p class="company">$2</p>')
               .replace(/(\d{4} - \d{4}|Present)/g, '<span class="date">$1</span>')
             }
@@ -339,8 +280,6 @@ export default function ResumeBuilder({ initialContent }) {
       `;
   
       const pdfBuffer = await downloadResumePDF(htmlContent);
-      
-      // Create and trigger download
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -386,14 +325,110 @@ export default function ResumeBuilder({ initialContent }) {
   };
 
   const handleAIEnhance = async (section) => {
-    toast.info(`Enhancing ${section} with AI...`);
-    // AI enhancement logic would go here
-    toast.success(`${section} enhanced successfully!`);
+    try {
+      setIsGenerating(true);
+      toast.info(`Enhancing ${section} with AI...`);
+
+      const values = getValues();
+      let currentContent = '';
+      let type = section;
+
+      switch (section.toLowerCase()) {
+        case 'summary':
+          currentContent = values.summary || '';
+          break;
+        case 'skills':
+          currentContent = values.skills || '';
+          break;
+        case 'achievements':
+          currentContent = values.achievements || '';
+          break;
+        case 'languages':
+          currentContent = values.languages || '';
+          break;
+        case 'experience':
+          if (values.experience?.length > 0) {
+            currentContent = values.experience.map(exp => exp.description).join('\n');
+            type = 'experience';
+          }
+          break;
+        case 'education':
+          if (values.education?.length > 0) {
+            currentContent = values.education.map(edu => edu.title).join('\n');
+            type = 'education';
+          }
+          break;
+        case 'projects':
+          if (values.projects?.length > 0) {
+            currentContent = values.projects.map(proj => proj.description).join('\n');
+            type = 'project';
+          }
+          break;
+        case 'resume':
+          currentContent = getCombinedContent();
+          type = 'resume';
+          break;
+        default:
+          throw new Error('Invalid section');
+      }
+
+      if (!currentContent) {
+        toast.error(`No content found to enhance in ${section}`);
+        return;
+      }
+
+      const improvedContent = await enhanceWithAI({ current: currentContent, type });
+
+      switch (section.toLowerCase()) {
+        case 'summary':
+          setValue('summary', improvedContent, { shouldDirty: true });
+          break;
+        case 'skills':
+          setValue('skills', improvedContent, { shouldDirty: true });
+          break;
+        case 'achievements':
+          setValue('achievements', improvedContent, { shouldDirty: true });
+          break;
+        case 'languages':
+          setValue('languages', improvedContent, { shouldDirty: true });
+          break;
+        case 'experience':
+          const updatedExp = values.experience.map((exp, index) => ({
+            ...exp,
+            description: improvedContent.split('\n')[index] || exp.description
+          }));
+          setValue('experience', updatedExp, { shouldDirty: true });
+          break;
+        case 'education':
+          const updatedEdu = values.education.map((edu, index) => ({
+            ...edu,
+            title: improvedContent.split('\n')[index] || edu.title
+          }));
+          setValue('education', updatedEdu, { shouldDirty: true });
+          break;
+        case 'projects':
+          const updatedProj = values.projects.map((proj, index) => ({
+            ...proj,
+            description: improvedContent.split('\n')[index] || proj.description
+          }));
+          setValue('projects', updatedProj, { shouldDirty: true });
+          break;
+        case 'resume':
+          setPreviewContent(improvedContent);
+          break;
+      }
+
+      toast.success(`${section} enhanced successfully!`);
+    } catch (error) {
+      console.error(`Error enhancing ${section}:`, error);
+      toast.error(`Failed to enhance ${section}: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
     <div data-color-mode="light" className="space-y-4">
-      {/* Header and progress section */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-gradient-to-r from-slate-50 to-gray-100 p-6 rounded-xl shadow-lg">
         <div className="flex flex-col">
           <h1 className="font-bold text-5xl md:text-6xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
@@ -411,9 +446,14 @@ export default function ResumeBuilder({ initialContent }) {
                 <Button
                   variant="ghost"
                   onClick={() => handleAIEnhance('resume')}
+                  disabled={isEnhancing}
                   className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-600 hover:from-purple-200 hover:to-indigo-200"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  {isEnhancing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
                   <span className="font-medium hidden md:inline">AI Enhance</span>
                 </Button>
               </TooltipTrigger>
@@ -462,7 +502,6 @@ export default function ResumeBuilder({ initialContent }) {
         </div>
       </div>
 
-      {/* Section navigation */}
       <div className="flex justify-between items-center mb-4">
         <Button 
           variant="ghost" 
@@ -483,328 +522,372 @@ export default function ResumeBuilder({ initialContent }) {
         </Button>
       </div>
 
-      {/* Main content tabs */}
       {isClient && (
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="edit">Form</TabsTrigger>
-          <TabsTrigger value="preview">Markdown</TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="edit">Form</TabsTrigger>
+            <TabsTrigger value="preview">Markdown</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="edit">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Contact Information */}
-            <div id="contact" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Contact Information</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleAIEnhance('contact')}
-                  className="text-purple-600"
-                >
-                  <Sparkles className="h-4 w-4 mr-1" /> Enhance
-                </Button>
+          <TabsContent value="edit">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              <div id="contact" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Contact Information</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleAIEnhance('contact')}
+                    disabled={isEnhancing}
+                    className="text-purple-600"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-1" />
+                    )}
+                    Enhance
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Email *</label>
+                    <Input
+                      {...register("contactInfo.email")}
+                      type="email"
+                      placeholder="your@email.com"
+                      error={errors.contactInfo?.email}
+                    />
+                    {errors.contactInfo?.email && (
+                      <p className="text-sm text-red-500">{errors.contactInfo.email.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Mobile Number</label>
+                    <Input
+                      {...register("contactInfo.mobile")}
+                      type="tel"
+                      placeholder="+1 234 567 8900"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">LinkedIn URL</label>
+                    <Input
+                      {...register("contactInfo.linkedin")}
+                      type="url"
+                      placeholder="https://linkedin.com/in/your-profile"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">GitHub URL</label>
+                    <Input
+                      {...register("contactInfo.github")}
+                      type="url"
+                      placeholder="https://github.com/your-username"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Twitter/X Profile</label>
+                    <Input
+                      {...register("contactInfo.twitter")}
+                      type="url"
+                      placeholder="https://twitter.com/your-handle"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email *</label>
-                  <Input
-                    {...register("contactInfo.email")}
-                    type="email"
-                    placeholder="your@email.com"
-                    error={errors.contactInfo?.email}
-                  />
-                  {errors.contactInfo?.email && (
-                    <p className="text-sm text-red-500">
-                      {errors.contactInfo.email.message}
-                    </p>
+
+              <div id="summary" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Professional Summary</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleAIEnhance('summary')}
+                    disabled={isEnhancing}
+                    className="text-purple-600"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-1" />
+                    )}
+                    Enhance
+                  </Button>
+                </div>
+                <Controller
+                  name="summary"
+                  control={control}
+                  render={({ field }) => (
+                    <Textarea
+                      {...field}
+                      className="h-32"
+                      placeholder="Write a compelling professional summary..."
+                      error={errors.summary}
+                    />
                   )}
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Mobile Number</label>
-                  <Input
-                    {...register("contactInfo.mobile")}
-                    type="tel"
-                    placeholder="+1 234 567 8900"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">LinkedIn URL</label>
-                  <Input
-                    {...register("contactInfo.linkedin")}
-                    type="url"
-                    placeholder="https://linkedin.com/in/your-profile"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">GitHub URL</label>
-                  <Input
-                    {...register("contactInfo.github")}
-                    type="url"
-                    placeholder="https://github.com/your-username"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Twitter/X Profile</label>
-                  <Input
-                    {...register("contactInfo.twitter")}
-                    type="url"
-                    placeholder="https://twitter.com/your-handle"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div id="summary" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Professional Summary</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleAIEnhance('summary')}
-                  className="text-purple-600"
-                >
-                  <Sparkles className="h-4 w-4 mr-1" /> Enhance
-                </Button>
-              </div>
-              <Controller
-                name="summary"
-                control={control}
-                render={({ field }) => (
-                  <Textarea
-                    {...field}
-                    className="h-32"
-                    placeholder="Write a compelling professional summary..."
-                    error={errors.summary}
-                  />
+                />
+                {errors.summary && (
+                  <p className="text-sm text-red-500">{errors.summary.message}</p>
                 )}
-              />
-              {errors.summary && (
-                <p className="text-sm text-red-500">{errors.summary.message}</p>
-              )}
-            </div>
-
-            {/* Skills */}
-            <div id="skills" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Technical Skills</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleAIEnhance('skills')}
-                  className="text-purple-600"
-                >
-                  <Sparkles className="h-4 w-4 mr-1" /> Enhance
-                </Button>
               </div>
-              <Controller
-                name="skills"
-                control={control}
-                render={({ field }) => (
-                  <Textarea
-                    {...field}
-                    className="h-32"
-                    placeholder="Programming Languages: Python, JavaScript..."
-                    error={errors.skills}
-                  />
-                )}
-              />
-              {errors.skills && (
-                <p className="text-sm text-red-500">{errors.skills.message}</p>
-              )}
-            </div>
 
-            {/* Experience */}
-            <div id="experience" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Work Experience</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleAIEnhance('experience')}
-                  className="text-purple-600"
-                >
-                  <Sparkles className="h-4 w-4 mr-1" /> Enhance All
-                </Button>
-              </div>
-              <Controller
-                name="experience"
-                control={control}
-                render={({ field }) => (
-                  <EntryForm
-                    type="Experience"
-                    entries={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-
-            {/* Education */}
-            <div id="education" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Education</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleAIEnhance('education')}
-                  className="text-purple-600"
-                >
-                  <Sparkles className="h-4 w-4 mr-1" /> Enhance All
-                </Button>
-              </div>
-              <Controller
-                name="education"
-                control={control}
-                render={({ field }) => (
-                  <EntryForm
-                    type="Education"
-                    entries={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-
-            {/* Projects */}
-            <div id="projects" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Projects</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleAIEnhance('projects')}
-                  className="text-purple-600"
-                >
-                  <Sparkles className="h-4 w-4 mr-1" /> Enhance All
-                </Button>
-              </div>
-              <Controller
-                name="projects"
-                control={control}
-                render={({ field }) => (
-                  <EntryForm
-                    type="Project"
-                    entries={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-
-            {/* Additional Information */}
-            <div id="achievements" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Achievements & Certifications</h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleAIEnhance('achievements')}
-                      className="text-purple-600"
-                    >
-                      <Sparkles className="h-4 w-4 mr-1" /> Enhance
-                    </Button>
-                  </div>
-                  <Controller
-                    name="achievements"
-                    control={control}
-                    render={({ field }) => (
-                      <Textarea
-                        {...field}
-                        placeholder="List your achievements..."
-                        className="h-32"
-                      />
+              <div id="skills" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Technical Skills</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleAIEnhance('skills')}
+                    disabled={isEnhancing}
+                    className="text-purple-600"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-1" />
                     )}
-                  />
+                    Enhance
+                  </Button>
                 </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Languages Known</h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleAIEnhance('languages')}
-                      className="text-purple-600"
-                    >
-                      <Sparkles className="h-4 w-4 mr-1" /> Enhance
-                    </Button>
-                  </div>
-                  <Controller
-                    name="languages"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder="English, Spanish, etc."
-                      />
+                <Controller
+                  name="skills"
+                  control={control}
+                  render={({ field }) => (
+                    <Textarea
+                      {...field}
+                      className="h-32"
+                      placeholder="Programming Languages: Python, JavaScript..."
+                      error={errors.skills}
+                    />
+                  )}
+                />
+                {errors.skills && (
+                  <p className="text-sm text-red-500">{errors.skills.message}</p>
+                )}
+              </div>
+
+              <div id="experience" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Work Experience</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleAIEnhance('experience')}
+                    disabled={isEnhancing}
+                    className="text-purple-600"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-1" />
                     )}
-                  />
+                    Enhance All
+                  </Button>
+                </div>
+                <Controller
+                  name="experience"
+                  control={control}
+                  render={({ field }) => (
+                    <EntryForm
+                      type="Experience"
+                      entries={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+
+              <div id="education" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Education</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleAIEnhance('education')}
+                    disabled={isEnhancing}
+                    className="text-purple-600"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-1" />
+                    )}
+                    Enhance All
+                  </Button>
+                </div>
+                <Controller
+                  name="education"
+                  control={control}
+                  render={({ field }) => (
+                    <EntryForm
+                      type="Education"
+                      entries={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+
+              <div id="projects" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Projects</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleAIEnhance('projects')}
+                    disabled={isEnhancing}
+                    className="text-purple-600"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-1" />
+                    )}
+                    Enhance All
+                  </Button>
+                </div>
+                <Controller
+                  name="projects"
+                  control={control}
+                  render={({ field }) => (
+                    <EntryForm
+                      type="Project"
+                      entries={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+
+              <div id="achievements" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">Achievements & Certifications</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleAIEnhance('achievements')}
+                        disabled={isEnhancing}
+                        className="text-purple-600"
+                      >
+                        {isEnhancing ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 mr-1" />
+                        )}
+                        Enhance
+                      </Button>
+                    </div>
+                    <Controller
+                      name="achievements"
+                      control={control}
+                      render={({ field }) => (
+                        <Textarea
+                          {...field}
+                          placeholder="List your achievements..."
+                          className="h-32"
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">Languages Known</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleAIEnhance('languages')}
+                        disabled={isEnhancing}
+                        className="text-purple-600"
+                      >
+                        {isEnhancing ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 mr-1" />
+                        )}
+                        Enhance
+                      </Button>
+                    </div>
+                    <Controller
+                      name="languages"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          placeholder="English, Spanish, etc."
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </form>
-        </TabsContent>
+            </form>
+          </TabsContent>
 
-        <TabsContent value="preview">
-          <div className="flex justify-between items-center mb-4">
-            <Button
-              variant="link"
-              type="button"
-              onClick={() => setResumeMode(resumeMode === "preview" ? "edit" : "preview")}
-              className="text-blue-600"
-            >
-              {resumeMode === "preview" ? (
-                <>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Markdown
-                </>
-              ) : (
-                <>
-                  <Monitor className="h-4 w-4 mr-2" />
-                  Show Preview
-                </>
-              )}
-            </Button>
-            <div className="flex gap-2">
+          <TabsContent value="preview">
+            <div className="flex justify-between items-center mb-4">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigator.clipboard.writeText(previewContent)}
+                variant="link"
+                type="button"
+                onClick={() => setResumeMode(resumeMode === "preview" ? "edit" : "preview")}
+                className="text-blue-600"
               >
-                Copy Markdown
+                {resumeMode === "preview" ? (
+                  <>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Markdown
+                  </>
+                ) : (
+                  <>
+                    <Monitor className="h-4 w-4 mr-2" />
+                    Show Preview
+                  </>
+                )}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleAIEnhance('markdown')}
-                className="text-purple-600 border-purple-300"
-              >
-                <Sparkles className="h-4 w-4 mr-1" /> Enhance
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(previewContent)}
+                >
+                  Copy Markdown
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAIEnhance('resume')}
+                  disabled={isEnhancing}
+                  className="text-purple-600 border-purple-300"
+                >
+                  {isEnhancing ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-1" />
+                  )}
+                  Enhance
+                </Button>
+              </div>
             </div>
-          </div>
 
-          {activeTab === "preview" && resumeMode !== "preview" && (
-            <div className="flex p-3 gap-2 items-center border-2 border-yellow-600 text-yellow-600 rounded mb-2">
-              <span className="text-sm">
-                Note: Switching to form will overwrite markdown edits
-              </span>
+            {activeTab === "preview" && resumeMode !== "preview" && (
+              <div className="flex p-3 gap-2 items-center border-2 border-yellow-600 text-yellow-600 rounded mb-2">
+                <span className="text-sm">
+                  Note: Switching to form will overwrite markdown edits
+                </span>
+              </div>
+            )}
+            <div className="border rounded-lg">
+              <MDEditor
+                value={previewContent}
+                onChange={setPreviewContent}
+                height={800}
+                preview={resumeMode}
+              />
             </div>
-          )}
-          <div className="border rounded-lg">
-            <MDEditor
-              value={previewContent}
-              onChange={setPreviewContent}
-              height={800}
-              preview={resumeMode}
-            />
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

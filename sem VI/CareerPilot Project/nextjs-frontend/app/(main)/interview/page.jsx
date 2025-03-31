@@ -8,11 +8,9 @@ export default async function InterviewPrepPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-6xl font-bold gradient-title">
-          Interview Preparation
-        </h1>
-      </div>
+        <h1 className="font-bold text-5xl md:text-6xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm ml-7 mt-5 mb-5">
+          Interview  Preparation
+          </h1>
       <div className="space-y-6">
         <StatsCards assessments={assessments} />
         <PerformanceChart assessments={assessments} />

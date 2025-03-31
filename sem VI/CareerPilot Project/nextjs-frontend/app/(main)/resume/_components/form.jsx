@@ -1,4 +1,3 @@
-// entry-form.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -37,9 +36,6 @@ import {
   entrySchema, 
   projectSchema 
 } from "@/app/lib/schema";
-
-
-
 import { 
   Sparkles, 
   PlusCircle, 
@@ -56,57 +52,13 @@ import {
   GraduationCap,
   Check,
   AlertCircle,
-  Bug,
-  ClipboardCopy,
   FileText,
   Code
 } from "lucide-react";
 import { improveWithAI } from "@/actions/resume";
 import { toast } from "sonner";
 import useFetch from "@/hooks/use-fetch";
-import { useClipboard } from "@/hooks/use-clipboard";
-
-
-
-
-const DebugPanel = ({ data }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { copyToClipboard } = useClipboard();
-
-  if (process.env.NODE_ENV !== 'development') return null;
-
-  return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => setIsOpen(!isOpen)}
-        className="rounded-full shadow-lg"
-      >
-        <Bug className="h-4 w-4" />
-      </Button>
-      
-      {isOpen && (
-        <div className="mt-2 p-4 bg-white rounded-lg shadow-xl border max-w-md max-h-96 overflow-auto">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold">Debug Information</h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => copyToClipboard(JSON.stringify(data, null, 2))}
-            >
-              <ClipboardCopy className="h-4 w-4 mr-1" />
-              Copy
-            </Button>
-          </div>
-          <pre className="text-xs bg-gray-100 p-2 rounded">
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-};
+import DebugPanel from "./debug-panel";
 
 const formatDisplayDate = (dateString) => {
   if (!dateString) return "";
@@ -192,13 +144,10 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
     },
   });
 
-
   const current = watch("current");
   const description = watch("description");
   const technologies = watch("technologies");
   const formValues = watch();
-
-
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isAdding) {
@@ -216,7 +165,6 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
     setEditingIndex(null);
     setCurrentTab("basic");
   };
-
 
   const validateCurrentForm = async () => {
     const result = await trigger();
@@ -236,7 +184,6 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
     const entryToEdit = entries[index];
     reset({
       ...entryToEdit,
-      // For projects, we don't want to set these fields
       ...(isProject && {
         organization: undefined,
         startDate: undefined,
@@ -244,7 +191,6 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
         current: undefined,
         location: undefined
       }),
-      // For non-projects, parse dates back to input format
       ...(!isProject && {
         startDate: entryToEdit.startDate ? parse(entryToEdit.startDate, "MMM yyyy", new Date()).toISOString().substring(0, 7) : "",
         endDate: entryToEdit.endDate && entryToEdit.endDate !== "Present" ? 
@@ -258,11 +204,9 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
 
   const handleAdd = handleValidation(async (data) => {
     try {
-      // Clear the saved form state
       if (typeof window !== 'undefined') {
         localStorage.removeItem(`entryFormState-${type}`);
       }
-
 
       if (isProject) {
         if (!data.title || !data.description) {
@@ -287,7 +231,6 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
           onChange([...entries, formattedEntry]);
         }
       } else {
-        // Existing non-project handling
         const isValid = await validateCurrentForm();
         if (!isValid) {
           toast.error("Please fix the errors before saving");
@@ -321,7 +264,6 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
     }
   });
   
-  // Helper function
   const formatDescription = (desc) => {
     return desc
       .split("\n")
@@ -329,7 +271,6 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
       .map(line => line.trim().startsWith('•') ? line.trim() : `• ${line.trim()}`)
       .join("\n");
   };
-
 
   const handleDelete = (index) => {
     try {
@@ -723,22 +664,22 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
                     )}
                   </div>
 
-{!isProject && (
-  <>
-    <div>
-      <Label htmlFor="organization">
-        {isEducation ? "Institution" : "Company"} *
-      </Label>
-      <Input
-        id="organization"
-        placeholder={isEducation ? "University Name" : "Company Name"}
-        {...register("organization")}
-        className="mt-1"
-      />
-      {errors.organization && (
-        <p className="mt-1 text-sm text-red-600">{errors.organization.message}</p>
-      )}
-    </div>
+                  {!isProject && (
+                    <>
+                      <div>
+                        <Label htmlFor="organization">
+                          {isEducation ? "Institution" : "Company"} *
+                        </Label>
+                        <Input
+                          id="organization"
+                          placeholder={isEducation ? "University Name" : "Company Name"}
+                          {...register("organization")}
+                          className="mt-1"
+                        />
+                        {errors.organization && (
+                          <p className="mt-1 text-sm text-red-600">{errors.organization.message}</p>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="startDate">Start Date *</Label>
