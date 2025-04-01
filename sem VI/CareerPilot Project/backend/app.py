@@ -11,8 +11,8 @@ from utils import extract_text_from_pdf, extract_text_from_docx, analyze_resume_
 import google.generativeai as genai
 from nltk.corpus import stopwords
 import uvicorn
+from typing import Dict
 
-# Load environment variables
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -65,8 +65,23 @@ async def upload_resume(file: UploadFile = File(...)):
     else:
         raise HTTPException(status_code=400, detail="Unsupported file format. Use PDF or DOCX.")
 
-    analysis_result = analyze_resume_with_ai(extracted_text)
-    return {"filename": file.filename, "analysis": analysis_result}
+    try:
+        analysis_result = analyze_resume_with_ai(extracted_text)
+    except Exception as e:
+        print(f"Error in analyze_resume_with_ai: {e}")
+        analysis_result = {}
+
+    try:
+        project_analysis = analyze_projects(extracted_text)
+    except Exception as e:
+        print(f"Error in analyze_projects: {e}")
+        project_analysis = {}
+
+    return {
+        "filename": file.filename,
+        "analysis": analysis_result or {},
+        "project_analysis": project_analysis or {}
+    }
 
 @app.post("/predict_job_role/")
 async def predict_job_role(file: UploadFile = File(...)):
@@ -84,19 +99,19 @@ async def predict_job_role(file: UploadFile = File(...)):
     else:
         raise HTTPException(status_code=400, detail="Unsupported file format. Use PDF or DOCX.")
 
-    # Model prediction
     cleaned_text = clean_text(extracted_text)
     X = vectorizer.transform([cleaned_text])
     prediction_encoded = model.predict(X)[0]
     confidence = model.predict_proba(X)[0].max() * 100
     predicted_role = label_encoder.inverse_transform([prediction_encoded])[0]
 
-    # Gemini prediction
     gemini_prompt = f"""
     You are an AI career advisor specializing in job role prediction. Based on the resume text below, predict the most suitable job role and provide a confidence score. Analyze skills, experience, and education to ensure accuracy. Return the result in this exact JSON format:
     {{
       "job_role": "<predicted job role>",
-      "confidence": "<confidence score as a percentage (e.g., 85.50%)>"
+      "confidence": "<confidence score as a percentage (e.g., 85.50%)>",
+      "missing_skills": ["list of skills that would improve this resume"],
+      "recommended_skills": ["list of recommended skills for the predicted role"]
     }}
 
     Resume Text:
@@ -110,7 +125,12 @@ async def predict_job_role(file: UploadFile = File(...)):
             raise ValueError("Incomplete Gemini response")
     except (json.JSONDecodeError, ValueError) as e:
         print(f"Gemini error: {e}")
-        gemini_data = {"job_role": "Unable to predict", "confidence": "0.00%"}
+        gemini_data = {
+            "job_role": "Unable to predict",
+            "confidence": "0.00%",
+            "missing_skills": [],
+            "recommended_skills": []
+        }
 
     return {
         "trained_model": {
@@ -119,6 +139,103 @@ async def predict_job_role(file: UploadFile = File(...)):
         },
         "gemini_prediction": gemini_data
     }
+
+@app.post("/analyze_skills/")
+async def fetch_skills_analysis(file: UploadFile = File(...)):
+    file_extension = file.filename.split(".")[-1].lower()
+    file_content = await file.read()
+    file_stream = io.BytesIO(file_content)
+    
+    if file_extension == "pdf":
+        extracted_text = extract_text_from_pdf(file_stream)
+    elif file_extension == "docx":
+        extracted_text = extract_text_from_docx(file_stream)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file format. Use PDF or DOCX.")
+
+    prompt = f"""
+    Analyze the following resume text and extract skills information. Return a JSON response with:
+    - "top_skills": List of top 5 skills mentioned (with frequency, e.g., [{{"name": "Python", "frequency": 3}}, ...])
+    - "skill_categories": Categorize skills into groups (Technical, Soft, Tools, etc.)
+    - "recommended_skills": List of skills to add based on industry trends
+    - "missing_industry_skills": List of commonly expected skills not found
+    
+    Resume Text:
+    {extracted_text}
+    
+    Return only valid JSON. If no skills are found or an error occurs, provide defaults like:
+    {{
+        "top_skills": [{{"name": "None Identified", "frequency": 0}}],
+        "skill_categories": {{"General": ["None"]}},
+        "recommended_skills": ["Add relevant skills"],
+        "missing_industry_skills": ["Unable to determine"]
+    }}
+    """
+    
+    try:
+        response = client.generate_content(prompt)
+        raw_text = response.text.strip("```json\n").strip("```")
+        if not raw_text or raw_text.isspace():
+            raise ValueError("Empty response from Gemini")
+        data = json.loads(raw_text)
+        data.setdefault("top_skills", [{"name": "None Identified", "frequency": 0}])
+        data.setdefault("skill_categories", {"General": ["None"]})
+        data.setdefault("recommended_skills", ["Add relevant skills"])
+        data.setdefault("missing_industry_skills", ["Unable to determine"])
+        return data
+    except Exception as e:
+        print(f"Gemini error in fetch_skills_analysis: {e}")
+        return {
+            "top_skills": [{"name": "None Identified", "frequency": 0}],
+            "skill_categories": {"General": ["None"]},
+            "recommended_skills": ["Add relevant skills"],
+            "missing_industry_skills": ["Unable to determine"]
+        }
+
+def analyze_projects(resume_text: str) -> Dict:
+    """Analyze projects from resume text"""
+    prompt = f"""
+    Analyze projects from this resume and provide structured feedback. Return JSON with:
+    - "projects_found": Number of projects identified (integer)
+    - "project_quality_score": Score (0-100) based on project descriptions (integer)
+    - "project_impact": List of strings showing quantified impact of each project (e.g., ["Increased efficiency by 20%", "Reduced costs by $5000"])
+    - "improvement_suggestions": List of strings with suggestions to better present projects
+    - "missing_elements": List of strings with what's lacking in project descriptions
+    
+    Resume Text:
+    {resume_text}
+    
+    Return only valid JSON. If no projects are found, provide defaults:
+    {{
+        "projects_found": 0,
+        "project_quality_score": 0,
+        "project_impact": [],
+        "improvement_suggestions": ["Add project details to strengthen resume"],
+        "missing_elements": ["No projects detected"]
+    }}
+    """
+    
+    try:
+        response = client.generate_content(prompt)
+        raw_text = response.text.strip("```json\n").strip("```")
+        if not raw_text or raw_text.isspace():
+            raise ValueError("Empty response from Gemini")
+        data = json.loads(raw_text)
+        data.setdefault("projects_found", 0)
+        data.setdefault("project_quality_score", 0)
+        data.setdefault("project_impact", [])
+        data.setdefault("improvement_suggestions", ["Add project details to strengthen resume"])
+        data.setdefault("missing_elements", ["No projects detected"])
+        return data
+    except Exception as e:
+        print(f"Error analyzing projects: {e}")
+        return {
+            "projects_found": 0,
+            "project_quality_score": 0,
+            "project_impact": [],
+            "improvement_suggestions": ["Add project details to strengthen resume"],
+            "missing_elements": ["No projects detected"]
+        }
 
 class ChatRequest(BaseModel):
     message: str
