@@ -14,6 +14,7 @@ import {
   TrendingUp,
   UserCircle,
   Settings,
+  ListTodo,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -54,12 +55,47 @@ export default async function Header() {
           <SignedIn>
 
 
-{/*             
-            <Link href="/dashboard">
-              <Button variant="outline" className="hidden md:flex items-center gap-2 hover:bg-gray-100">
-                <LayoutDashboard className="h-4 w-4" />
-                Professional Outlook              </Button>
-            </Link> */}
+          <Link href="/todo" className="relative group">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 px-4 py-2 
+                  bg-gradient-to-r from-green-50 to-emerald-50 
+                  hover:from-green-100 hover:to-emerald-100 
+                  border-2 border-transparent hover:border-green-200 
+                  transition-all duration-300 shadow-sm hover:shadow-md
+                  group relative overflow-hidden"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <ListTodo className="h-4 w-4 text-green-600 
+                      transition-transform duration-200 group-hover:-translate-y-5" />
+                    <BarChart className="h-4 w-4 text-emerald-600 absolute 
+                      top-0 left-0 translate-y-5 group-hover:translate-y-0 
+                      transition-transform duration-200" />
+                  </div>
+                  <span className="font-medium bg-gradient-to-r from-green-600 
+                    to-emerald-600 bg-clip-text text-transparent">
+                    Revision Topics
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-green-600 
+                    transform transition-transform duration-200 
+                    group-hover:translate-x-1" />
+                </div>
+                
+                {/* Notification Dot */}
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="absolute inline-flex w-full h-full rounded-full 
+                    bg-green-400 opacity-75 animate-ping"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 
+                    bg-green-500"></span>
+                </span>
+                
+                {/* Hover Effect Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-green-100/50 
+                  to-emerald-100/50 opacity-0 group-hover:opacity-100 
+                  transition-opacity duration-300"></div>
+              </Button>
+            </Link>
 
 
 
