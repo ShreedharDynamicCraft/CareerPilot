@@ -29,6 +29,7 @@ model User {
   assessments   Assessment[]
   resume        Resume?
   coverLetter   CoverLetter[]
+  todos         Todo[]    // Add this relation
 }
 
 model Assessment {
@@ -99,4 +100,19 @@ model IndustryInsight {
   nextUpdate    DateTime  // Scheduled update time
 
   @@index([industry])
+}
+
+model Todo {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  text        String
+  completed   Boolean   @default(false)
+  priority    String    @default("medium") // high, medium, low
+  source      String?   // interview, manual, etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  dueDate     DateTime?
+
+  @@index([userId])
 }

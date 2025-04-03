@@ -1,12 +1,18 @@
+// lib/prisma.js
 import { PrismaClient } from "@prisma/client";
 
-export const db = globalThis.prisma || new PrismaClient();
+const globalForPrisma = globalThis; // Using globalThis instead of global
 
-if (process.env.NODE_ENV !== "production") // yeh check krega kya hum production mode me hai ya nahi like agar hum development mode me hai toh yeh code chalega
-  
-  {
-  globalThis.prisma = db; // yeh global variable banayega prisma jo ki db se equal hoga
+const prisma = globalForPrisma.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
+
+// Named export for consistent usage
+export const db = prisma;
+// Default export for backward compatibility
+export default prisma;
 
 // globalThis.prisma: This global variable ensures that the Prisma client instance is
 // reused across hot reloads during development. Without this, each time your application
