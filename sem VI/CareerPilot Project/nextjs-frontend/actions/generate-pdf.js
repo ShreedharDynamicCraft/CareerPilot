@@ -5,7 +5,7 @@ export const generatePDF = async (htmlContent) => {
   let browser;
   try {
     browser = await puppeteer.launch({
-      headless: true,
+      headless: true, 
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
     
@@ -28,7 +28,7 @@ export const generatePDF = async (htmlContent) => {
       },
       scale: 0.9 // Slightly reduce scale to prevent clipping
     });
-
+console.log('processing')
     return pdfBuffer;
   } catch (error) {
     console.error('PDF generation error:', error);

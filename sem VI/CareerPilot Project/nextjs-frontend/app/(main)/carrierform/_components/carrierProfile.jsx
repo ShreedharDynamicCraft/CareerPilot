@@ -36,6 +36,8 @@ import {
 import useFetch from "@/hooks/use-fetch";
 import { onboardingSchema } from "@/app/lib/schema";
 
+console.log(onboardingSchema);
+
 import { updateUser, getUser } from "@/actions/user";
 
 export default function CarrierProfile({ industries }) {
