@@ -208,12 +208,13 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
         localStorage.removeItem(`entryFormState-${type}`);
       }
 
+      const isValid = await validateCurrentForm();
+      if (!isValid) {
+        toast.error("Please fix the errors before saving");
+        return;
+      }
+
       if (isProject) {
-        if (!data.title || !data.description) {
-          toast.error("Title and Description are required for projects");
-          return;
-        }
-  
         const formattedEntry = {
           title: data.title,
           description: formatDescription(data.description),
@@ -231,12 +232,6 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
           onChange([...entries, formattedEntry]);
         }
       } else {
-        const isValid = await validateCurrentForm();
-        if (!isValid) {
-          toast.error("Please fix the errors before saving");
-          return;
-        }
-  
         const formattedEntry = {
           ...data,
           description: formatDescription(data.description),
@@ -416,84 +411,23 @@ export const EntryForm = ({ type, entries = [], onChange }) => {
     <div className="space-y-6 relative">
       <DebugPanel data={{ entries, formValues, errors, validationErrors }} />
 
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeColor()}`}>
-            {getTypeIcon()}
-            <span className="ml-2">{type}</span>
-          </span>
-          <span className="text-sm text-gray-500">
-            {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
-          </span>
-          <div className="flex items-center gap-2">
-            <Progress value={sectionCompletion} className="h-2 w-20" />
-            <span className="text-xs text-gray-500">{sectionCompletion}%</span>
-          </div>
-        </div>
-        
-        <div className="flex space-x-2">
-          {entries.length > 0 && (
+      {!isAdding && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">{type}</h3>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={handleImproveAll}
-              className="border-purple-500 text-purple-600 hover:bg-purple-50"
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              Enhance All
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              reset();
-              setIsAdding(true);
-              setCurrentTab("basic");
-            }}
-            className="border-blue-500 text-blue-600 hover:bg-blue-50"
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Add New
-          </Button>
-        </div>
-      </div>
-
-      {validationErrors.length > 0 && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2 text-red-600 mb-2">
-            <AlertCircle className="h-4 w-4" />
-            <span className="font-medium">Fix these errors to continue:</span>
-          </div>
-          <ul className="list-disc pl-5 text-sm text-red-600 space-y-1">
-            {validationErrors.map((error, index) => (
-              <li key={index}>
-                {error.field}: {error.message}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {entries.length === 0 ? (
-        <div className="border-2 border-dashed rounded-lg p-8 text-center">
-          <FileText className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No {type} entries</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Get started by adding your first {type.toLowerCase()} entry.
-          </p>
-          <div className="mt-6">
-            <Button
-              onClick={() => setIsAdding(true)}
+              onClick={() => {
+                setIsAdding(true);
+                setEditingIndex(null);
+                setCurrentTab("basic");
+                reset();
+              }}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <PlusCircle className="h-4 w-4 mr-2" />
               Add {type}
             </Button>
           </div>
-        </div>
-      ) : (
-        <div className="grid gap-4">
           {entries.map((item, index) => (
             <Card key={index} className="border-l-4 border-blue-500 hover:shadow-md transition-shadow group">
               <CardHeader className="pb-2">

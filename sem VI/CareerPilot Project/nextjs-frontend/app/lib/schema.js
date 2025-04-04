@@ -29,6 +29,15 @@ export const contactSchema = z.object({
   twitter: z.string().optional(),
 });
 
+export const projectSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  technologies: z.string().optional(),
+  achievements: z.string().optional(),
+  githubUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  demoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
 export const entrySchema = z
   .object({
     title: z.string().min(1, "Title is required"),
@@ -57,7 +66,7 @@ export const resumeSchema = z.object({
   skills: z.string().min(1, "Skills are required"),
   experience: z.array(entrySchema),
   education: z.array(entrySchema),
-  projects: z.array(entrySchema),
+  projects: z.array(projectSchema),
 });
 
 export const coverLetterSchema = z.object({

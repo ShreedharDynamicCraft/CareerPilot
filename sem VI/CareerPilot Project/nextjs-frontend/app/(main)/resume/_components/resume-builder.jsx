@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useResumeData } from "@/hooks/use-resume-data";
-import { Download, Edit, Loader2, Monitor, Save, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Download, Edit, Loader2, Monitor, Save, ChevronLeft, ChevronRight, Sparkles, Info } from "lucide-react";
 import { toast } from "sonner";
 import MDEditor from "@uiw/react-md-editor";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export default function ResumeBuilder({ initialContent }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [completionProgress, setCompletionProgress] = useState(0);
   const [isClient, setIsClient] = useState(false);
+  const [enhancingSections, setEnhancingSections] = useState({});
 
   const { resumeData, saveResumeData } = useResumeData();
 
@@ -324,106 +325,104 @@ export default function ResumeBuilder({ initialContent }) {
     });
   };
 
-  const handleAIEnhance = async (section) => {
-    try {
-      setIsGenerating(true);
-      toast.info(`Enhancing ${section} with AI...`);
+  const handleAIEnhance = async (section, enhanceType = 'content') => {
+    const toastId = `enhance-${section}`;
 
+    try {
       const values = getValues();
       let currentContent = '';
       let type = section;
 
+      // Get current content based on section
       switch (section.toLowerCase()) {
         case 'summary':
-          currentContent = values.summary || '';
-          break;
-        case 'skills':
-          currentContent = values.skills || '';
+          currentContent = values.summary?.trim() || '';
+          type = enhanceType === 'ats' ? 'summary_ats' : 'summary';
+          if (!currentContent || currentContent.length < 10) {
+            toast.error('Please write a summary of at least 10 characters before enhancing', { id: toastId });
+            return;
+          }
           break;
         case 'achievements':
-          currentContent = values.achievements || '';
-          break;
-        case 'languages':
-          currentContent = values.languages || '';
-          break;
-        case 'experience':
-          if (values.experience?.length > 0) {
-            currentContent = values.experience.map(exp => exp.description).join('\n');
-            type = 'experience';
+          currentContent = values.achievements?.trim() || '';
+          if (!currentContent || currentContent.length < 10) {
+            toast.error('Please add some achievements (at least 10 characters) before enhancing', { id: toastId });
+            return;
           }
-          break;
-        case 'education':
-          if (values.education?.length > 0) {
-            currentContent = values.education.map(edu => edu.title).join('\n');
-            type = 'education';
-          }
-          break;
-        case 'projects':
-          if (values.projects?.length > 0) {
-            currentContent = values.projects.map(proj => proj.description).join('\n');
-            type = 'project';
-          }
-          break;
-        case 'resume':
-          currentContent = getCombinedContent();
-          type = 'resume';
           break;
         default:
           throw new Error('Invalid section');
       }
 
-      if (!currentContent) {
-        toast.error(`No content found to enhance in ${section}`);
-        return;
+      // Set loading state for specific section
+      setEnhancingSections(prev => ({ ...prev, [section]: true }));
+
+      // Show loading toast
+      toast.loading(`Enhancing ${section}...`, { id: toastId });
+
+      // Call AI enhancement
+      const response = await enhanceWithAI({ 
+        current: currentContent, 
+        type 
+      });
+
+      if (!response || typeof response !== 'string' || response.trim().length === 0) {
+        throw new Error('Invalid response received from AI');
       }
 
-      const improvedContent = await enhanceWithAI({ current: currentContent, type });
-
+      // Update content based on section
       switch (section.toLowerCase()) {
         case 'summary':
-          setValue('summary', improvedContent, { shouldDirty: true });
-          break;
-        case 'skills':
-          setValue('skills', improvedContent, { shouldDirty: true });
+          setValue('summary', response.trim(), { shouldDirty: true });
+          toast.success(
+            `Professional summary ${enhanceType === 'ats' ? 'optimized for ATS' : 'enhanced'} successfully!`,
+            { id: toastId }
+          );
           break;
         case 'achievements':
-          setValue('achievements', improvedContent, { shouldDirty: true });
-          break;
-        case 'languages':
-          setValue('languages', improvedContent, { shouldDirty: true });
-          break;
-        case 'experience':
-          const updatedExp = values.experience.map((exp, index) => ({
-            ...exp,
-            description: improvedContent.split('\n')[index] || exp.description
-          }));
-          setValue('experience', updatedExp, { shouldDirty: true });
-          break;
-        case 'education':
-          const updatedEdu = values.education.map((edu, index) => ({
-            ...edu,
-            title: improvedContent.split('\n')[index] || edu.title
-          }));
-          setValue('education', updatedEdu, { shouldDirty: true });
-          break;
-        case 'projects':
-          const updatedProj = values.projects.map((proj, index) => ({
-            ...proj,
-            description: improvedContent.split('\n')[index] || proj.description
-          }));
-          setValue('projects', updatedProj, { shouldDirty: true });
-          break;
-        case 'resume':
-          setPreviewContent(improvedContent);
+          setValue('achievements', response.trim(), { shouldDirty: true });
+          toast.success('Achievements enhanced successfully!', {
+            id: toastId
+          });
           break;
       }
 
-      toast.success(`${section} enhanced successfully!`);
     } catch (error) {
       console.error(`Error enhancing ${section}:`, error);
-      toast.error(`Failed to enhance ${section}: ${error.message}`);
+      toast.error(error.message || `Failed to enhance ${section}. Please try again.`, {
+        id: toastId
+      });
     } finally {
-      setIsGenerating(false);
+      // Clear loading state for specific section
+      setEnhancingSections(prev => ({ ...prev, [section]: false }));
+    }
+  };
+
+  // Update the click handlers to prevent default behavior and handle errors
+  const handleSummaryAtsClick = async (e) => {
+    e.preventDefault();
+    try {
+      await handleAIEnhance('summary', 'ats');
+    } catch (error) {
+      console.error('Error in ATS enhancement:', error);
+    }
+  };
+
+  const handleSummaryEnhanceClick = async (e) => {
+    e.preventDefault();
+    try {
+      await handleAIEnhance('summary', 'content');
+    } catch (error) {
+      console.error('Error in summary enhancement:', error);
+    }
+  };
+
+  const handleAchievementsEnhanceClick = async (e) => {
+    e.preventDefault();
+    try {
+      await handleAIEnhance('achievements');
+    } catch (error) {
+      console.error('Error in achievements enhancement:', error);
     }
   };
 
@@ -534,20 +533,6 @@ export default function ResumeBuilder({ initialContent }) {
               <div id="contact" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Contact Information</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleAIEnhance('contact')}
-                    disabled={isEnhancing}
-                    className="text-purple-600"
-                  >
-                    {isEnhancing ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-1" />
-                    )}
-                    Enhance
-                  </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
                   <div className="space-y-2">
@@ -600,55 +585,89 @@ export default function ResumeBuilder({ initialContent }) {
               <div id="summary" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Professional Summary</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleAIEnhance('summary')}
-                    disabled={isEnhancing}
-                    className="text-purple-600"
-                  >
-                    {isEnhancing ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-1" />
-                    )}
-                    Enhance
-                  </Button>
+                  <div className="flex gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleSummaryAtsClick}
+                            disabled={enhancingSections.summary}
+                            className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                          >
+                            {enhancingSections.summary ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-4 w-4 mr-1" />
+                            )}
+                            Make ATS-Friendly
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-sm max-w-xs">
+                            Optimize your summary for Applicant Tracking Systems (ATS) by incorporating relevant keywords and improving readability.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleSummaryEnhanceClick}
+                            disabled={enhancingSections.summary}
+                            className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                          >
+                            {enhancingSections.summary ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-4 w-4 mr-1" />
+                            )}
+                            Enhance Summary
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-sm max-w-xs">
+                            Improve your summary's impact by highlighting achievements, skills, and career goals more effectively.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
-                <Controller
-                  name="summary"
-                  control={control}
-                  render={({ field }) => (
-                    <Textarea
-                      {...field}
-                      className="h-32"
-                      placeholder="Write a compelling professional summary..."
-                      error={errors.summary}
-                    />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      A strong professional summary should be 3-5 sentences highlighting your key qualifications, achievements, and career goals.
+                    </span>
+                  </div>
+                  <Controller
+                    name="summary"
+                    control={control}
+                    render={({ field }) => (
+                      <Textarea
+                        {...field}
+                        className="h-32 font-mono text-sm"
+                        placeholder="Write a compelling professional summary that highlights your expertise, achievements, and career goals. Example:
+                        
+Innovative software engineer with 5+ years of experience in full-stack development and cloud architecture. Proven track record of delivering scalable solutions that drive business growth, including a microservices platform that reduced deployment time by 60%. Skilled in React, Node.js, and AWS, with a focus on building high-performance applications. Seeking to leverage technical expertise and leadership abilities to drive innovation in a senior development role."
+                        error={errors.summary}
+                      />
+                    )}
+                  />
+                  {errors.summary && (
+                    <p className="text-sm text-red-500">{errors.summary.message}</p>
                   )}
-                />
-                {errors.summary && (
-                  <p className="text-sm text-red-500">{errors.summary.message}</p>
-                )}
+                </div>
               </div>
 
               <div id="skills" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Technical Skills</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleAIEnhance('skills')}
-                    disabled={isEnhancing}
-                    className="text-purple-600"
-                  >
-                    {isEnhancing ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-1" />
-                    )}
-                    Enhance
-                  </Button>
                 </div>
                 <Controller
                   name="skills"
@@ -670,20 +689,6 @@ export default function ResumeBuilder({ initialContent }) {
               <div id="experience" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Work Experience</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleAIEnhance('experience')}
-                    disabled={isEnhancing}
-                    className="text-purple-600"
-                  >
-                    {isEnhancing ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-1" />
-                    )}
-                    Enhance All
-                  </Button>
                 </div>
                 <Controller
                   name="experience"
@@ -701,20 +706,6 @@ export default function ResumeBuilder({ initialContent }) {
               <div id="education" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Education</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleAIEnhance('education')}
-                    disabled={isEnhancing}
-                    className="text-purple-600"
-                  >
-                    {isEnhancing ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-1" />
-                    )}
-                    Enhance All
-                  </Button>
                 </div>
                 <Controller
                   name="education"
@@ -732,20 +723,6 @@ export default function ResumeBuilder({ initialContent }) {
               <div id="projects" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Projects</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleAIEnhance('projects')}
-                    disabled={isEnhancing}
-                    className="text-purple-600"
-                  >
-                    {isEnhancing ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-1" />
-                    )}
-                    Enhance All
-                  </Button>
                 </div>
                 <Controller
                   name="projects"
@@ -765,20 +742,31 @@ export default function ResumeBuilder({ initialContent }) {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-medium">Achievements & Certifications</h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleAIEnhance('achievements')}
-                        disabled={isEnhancing}
-                        className="text-purple-600"
-                      >
-                        {isEnhancing ? (
-                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-4 w-4 mr-1" />
-                        )}
-                        Enhance
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={handleAchievementsEnhanceClick}
+                              disabled={enhancingSections.achievements}
+                              className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                            >
+                              {enhancingSections.achievements ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-4 w-4 mr-1" />
+                              )}
+                              Enhance Achievements
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-sm max-w-xs">
+                              Improve your achievements by quantifying results and highlighting impactful certifications.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                     <Controller
                       name="achievements"
@@ -795,20 +783,6 @@ export default function ResumeBuilder({ initialContent }) {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-medium">Languages Known</h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleAIEnhance('languages')}
-                        disabled={isEnhancing}
-                        className="text-purple-600"
-                      >
-                        {isEnhancing ? (
-                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-4 w-4 mr-1" />
-                        )}
-                        Enhance
-                      </Button>
                     </div>
                     <Controller
                       name="languages"
@@ -846,29 +820,13 @@ export default function ResumeBuilder({ initialContent }) {
                   </>
                 )}
               </Button>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigator.clipboard.writeText(previewContent)}
-                >
-                  Copy Markdown
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAIEnhance('resume')}
-                  disabled={isEnhancing}
-                  className="text-purple-600 border-purple-300"
-                >
-                  {isEnhancing ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 mr-1" />
-                  )}
-                  Enhance
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigator.clipboard.writeText(previewContent)}
+              >
+                Copy Markdown
+              </Button>
             </div>
 
             {activeTab === "preview" && resumeMode !== "preview" && (
