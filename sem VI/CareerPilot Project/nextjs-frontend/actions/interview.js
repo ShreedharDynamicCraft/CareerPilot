@@ -67,24 +67,55 @@ export async function saveQuizResult(questions, answers, score) {
 
   if (!user) throw new Error("User not found");
 
+  // Enhanced question results with topic analysis
   const questionResults = questions.map((q, index) => ({
     question: q.question,
     answer: q.correctAnswer,
     userAnswer: answers[index],
     isCorrect: q.correctAnswer === answers[index],
     explanation: q.explanation,
+    topic: q.topic || "General",
+    subtopic: q.subtopic,
+    difficulty: q.difficulty || "medium"
   }));
 
-  // Get wrong answers
+  // Get wrong answers and analyze patterns
   const wrongAnswers = questionResults.filter((q) => !q.isCorrect);
+  
+  // Topic-wise performance analysis
+  const topicAnalysis = questionResults.reduce((acc, q) => {
+    if (!acc[q.topic]) {
+      acc[q.topic] = { total: 0, correct: 0, incorrect: 0 };
+    }
+    acc[q.topic].total++;
+    if (q.isCorrect) {
+      acc[q.topic].correct++;
+    } else {
+      acc[q.topic].incorrect++;
+    }
+    return acc;
+  }, {});
 
-  // Only generate improvement tips if there are wrong answers
+  // Calculate topic-wise scores
+  const topicScores = Object.entries(topicAnalysis).map(([topic, stats]) => ({
+    topic,
+    score: Math.round((stats.correct / stats.total) * 100),
+    total: stats.total,
+    correct: stats.correct,
+    incorrect: stats.incorrect
+  }));
+
+  // Generate personalized improvement tips
   let improvementTip = null;
   if (wrongAnswers.length > 0) {
+    const weakTopics = topicScores
+      .filter(t => t.score < 70)
+      .map(t => t.topic)
+      .join(", ");
+
     const wrongQuestionsText = wrongAnswers
-      .map(
-        (q) =>
-          `Question: "${q.question}"\nCorrect Answer: "${q.answer}"\nUser Answer: "${q.userAnswer}"`
+      .map(q => 
+        `Question: "${q.question}"\nTopic: ${q.topic}\nSubtopic: ${q.subtopic || 'N/A'}\nCorrect Answer: "${q.answer}"\nUser Answer: "${q.userAnswer}"`
       )
       .join("\n\n");
 
@@ -93,20 +124,20 @@ export async function saveQuizResult(questions, answers, score) {
 
       ${wrongQuestionsText}
 
-      Based on these mistakes, provide a concise, specific improvement tip.
-      Focus on the knowledge gaps revealed by these wrong answers.
-      Keep the response under 2 sentences and make it encouraging.
-      Don't explicitly mention the mistakes, instead focus on what to learn/practice.
+      Weak topics identified: ${weakTopics}
+
+      Based on these mistakes and weak topics, provide:
+      1. A specific improvement tip focusing on the knowledge gaps
+      2. Keep it encouraging and actionable
+      3. Suggest specific resources or practice areas
+      4. Keep the response under 3 sentences
     `;
 
     try {
       const tipResult = await model.generateContent(improvementPrompt);
-
       improvementTip = tipResult.response.text().trim();
-      console.log(improvementTip);
     } catch (error) {
       console.error("Error generating improvement tip:", error);
-      // Continue without improvement tip if generation fails
     }
   }
 
@@ -118,6 +149,10 @@ export async function saveQuizResult(questions, answers, score) {
         questions: questionResults,
         category: "Technical",
         improvementTip,
+        topicAnalysis: topicScores,
+        weakTopics: topicScores.filter(t => t.score < 70).map(t => t.topic),
+        strongTopics: topicScores.filter(t => t.score >= 70).map(t => t.topic),
+        timestamp: new Date(),
       },
     });
 
@@ -143,12 +178,52 @@ export async function getAssessments() {
       where: {
         userId: user.id,
       },
+      // Remove the invalid include for questions since it's a Json[] field, not a relation
+      include: {
+        user: true // Include related user data if needed
+      },
       orderBy: {
         createdAt: "asc",
       },
     });
 
-    return assessments;
+    // Transform the data to include topic analysis
+    const transformedAssessments = assessments.map(assessment => {
+      const topicAnalysis = {};
+      
+      // Process questions to calculate topic-wise performance
+      // Since questions is a Json[] field, we can access it directly
+      if (Array.isArray(assessment.questions)) {
+        assessment.questions.forEach(question => {
+          const topicName = question.topic || 'General';
+          if (!topicAnalysis[topicName]) {
+            topicAnalysis[topicName] = {
+              correct: 0,
+              total: 0
+            };
+          }
+          if (question.isCorrect) {
+            topicAnalysis[topicName].correct++;
+          }
+          topicAnalysis[topicName].total++;
+        });
+      }
+
+      // Convert topicAnalysis object to array format
+      const topicAnalysisArray = Object.entries(topicAnalysis).map(([topic, stats]) => ({
+        topic,
+        correct: stats.correct,
+        total: stats.total
+      }));
+
+      return {
+        ...assessment,
+        quizScore: (assessment.quizScore || 0), // Use quizScore directly from the assessment
+        topicAnalysis: topicAnalysisArray
+      };
+    });
+
+    return transformedAssessments;
   } catch (error) {
     console.error("Error fetching assessments:", error);
     throw new Error("Failed to fetch assessments");

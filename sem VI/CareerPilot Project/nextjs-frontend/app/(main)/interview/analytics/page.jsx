@@ -16,19 +16,26 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
-        // Get test results from localStorage
-        const testResults = JSON.parse(localStorage.getItem("testResults") || "[]");
+        // Get assessments from the API
+        const response = await fetch('/api/assessments');
+        const data = await response.json();
         
-        // Calculate analytics
+        // Ensure assessments is an array
+        const assessments = Array.isArray(data) ? data : [];
+        
+        // Calculate analytics with null checks
         const topicPerformance = {};
-        const totalTests = testResults.length;
+        const totalTests = assessments.length || 0;
         let totalScore = 0;
 
-        testResults.forEach(result => {
-          totalScore += result.score;
+        assessments.forEach(assessment => {
+          if (!assessment) return;
+          totalScore += assessment.quizScore || 0;
           
-          // Aggregate topic performance
-          result.report.detailedAnalysis.topicPerformance.forEach((performance, topic) => {
+          // Aggregate topic performance from topicAnalysis
+          assessment.topicAnalysis?.forEach(analysis => {
+            if (!analysis) return;
+            const topic = analysis.topic || 'Unknown';
             if (!topicPerformance[topic]) {
               topicPerformance[topic] = {
                 correct: 0,
@@ -36,18 +43,20 @@ export default function AnalyticsPage() {
                 score: 0
               };
             }
-            topicPerformance[topic].correct += performance.correct;
-            topicPerformance[topic].total += performance.total;
-            topicPerformance[topic].score = (topicPerformance[topic].correct / topicPerformance[topic].total) * 100;
+            topicPerformance[topic].correct += analysis.correct || 0;
+            topicPerformance[topic].total += analysis.total || 0;
+            topicPerformance[topic].score = topicPerformance[topic].total > 0 
+              ? (topicPerformance[topic].correct / topicPerformance[topic].total) * 100
+              : 0;
           });
         });
 
-        const averageScore = totalScore / totalTests;
+        const averageScore = totalTests > 0 ? (totalScore / totalTests) : 0;
         const topicsToRevise = new Set();
 
         // Identify topics that need revision (score < 70%)
-        Object.entries(topicPerformance).forEach(([topic, performance]) => {
-          if (performance.score < 70) {
+        Object.entries(topicPerformance || {}).forEach(([topic, performance]) => {
+          if (performance && performance.score < 70) {
             topicsToRevise.add(topic);
           }
         });
@@ -57,7 +66,7 @@ export default function AnalyticsPage() {
           totalTests,
           topicPerformance,
           topicsToRevise: Array.from(topicsToRevise),
-          recentTests: testResults.slice(-5)
+          recentTests: assessments.slice(-5)
         });
       } catch (error) {
         console.error("Error loading analytics:", error);
@@ -73,7 +82,7 @@ export default function AnalyticsPage() {
     return <div>Loading analytics...</div>;
   }
 
-  const topicData = Object.entries(analytics.topicPerformance).map(([topic, performance]) => ({
+  const topicData = Object.entries(analytics?.topicPerformance || {}).map(([topic, performance]) => ({
     name: topic,
     score: performance.score
   }));
@@ -166,7 +175,7 @@ export default function AnalyticsPage() {
                       {new Date(test.timestamp).toLocaleDateString()}
                     </p>
                   </div>
-                  <Progress value={test.score} className="w-24 h-2" />
+                  <Progress value={test.quizScore} className="w-24 h-2" />
                 </div>
               ))}
             </div>
@@ -175,4 +184,4 @@ export default function AnalyticsPage() {
       </div>
     </div>
   );
-} 
+}
