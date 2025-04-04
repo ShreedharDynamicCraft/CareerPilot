@@ -12,12 +12,13 @@ import {
 } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { generateQuiz, saveQuizResult } from "@/actions/interview";
+import { generateQuiz, saveQuizResult, generateDailyQuiz } from "@/actions/interview";
 import QuizResult from "./quiz-result";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
+import { Badge } from "@/components/ui/badge";
 
-export default function Quiz() {
+export default function Quiz({ quizType = "technical", questionCount = 15 }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -26,7 +27,14 @@ export default function Quiz() {
     loading: generatingQuiz,
     fn: generateQuizFn,
     data: quizData,
-  } = useFetch(generateQuiz);
+  } = useFetch(async () => {
+    // Use the appropriate quiz generation function based on the type
+    if (quizType === "daily") {
+      return await generateDailyQuiz();
+    } else {
+      return await generateQuiz(quizType, questionCount);
+    }
+  });
 
   const {
     loading: savingResult,
@@ -69,7 +77,7 @@ export default function Quiz() {
   const finishQuiz = async () => {
     const score = calculateScore();
     try {
-      await saveQuizResultFn(quizData, answers, score);
+      await saveQuizResultFn(quizData, answers, score, quizType);
       toast.success("Quiz completed!");
     } catch (error) {
       toast.error(error.message || "Failed to save quiz results");
@@ -101,13 +109,31 @@ export default function Quiz() {
     return (
       <Card className="mx-2">
         <CardHeader>
-          <CardTitle>Ready to test your knowledge?</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Ready to test your knowledge?
+            <Badge variant="outline" className="ml-2">
+              {quizType === "daily" ? "Daily Practice" : 
+               quizType === "oa" ? "Online Assessment" :
+               quizType === "dsa" ? "DSA Practice" :
+               quizType === "ai" ? "AI Interview" : "Technical"}
+            </Badge>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            This quiz contains 10 questions specific to your industry and
+            This quiz contains {questionCount} questions specific to your industry and
             skills. Take your time and choose the best answer for each question.
           </p>
+          {quizType === "daily" && (
+            <p className="text-sm mt-2 text-muted-foreground">
+              Daily practice helps reinforce your knowledge with quick, focused questions.
+            </p>
+          )}
+          {quizType === "dsa" && (
+            <p className="text-sm mt-2 text-muted-foreground">
+              These questions focus on data structures and algorithms commonly asked in technical interviews.
+            </p>
+          )}
         </CardContent>
         <CardFooter>
           <Button onClick={generateQuizFn} className="w-full">
@@ -123,8 +149,19 @@ export default function Quiz() {
   return (
     <Card className="mx-2">
       <CardHeader>
-        <CardTitle>
-          Question {currentQuestion + 1} of {quizData.length}
+        <CardTitle className="flex items-center justify-between">
+          <span>Question {currentQuestion + 1} of {quizData.length}</span>
+          <div className="flex gap-2">
+            {quizData[currentQuestion].topic && (
+              <Badge variant="outline">{quizData[currentQuestion].topic}</Badge>
+            )}
+            {quizData[currentQuestion].difficulty && (
+              <Badge variant={quizData[currentQuestion].difficulty === "easy" ? "success" : 
+                     quizData[currentQuestion].difficulty === "medium" ? "warning" : "destructive"}>
+                {quizData[currentQuestion].difficulty}
+              </Badge>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

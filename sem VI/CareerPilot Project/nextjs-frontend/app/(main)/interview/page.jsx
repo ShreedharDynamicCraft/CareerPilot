@@ -4,7 +4,7 @@ import PerformanceChart from "./_components/performace-chart";
 import QuizList from "./_components/quiz-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Brain, Code, Video, Target, BarChart, ChevronRight } from "lucide-react";
+import { Brain, Code, Video, Target, BarChart, ChevronRight, Calendar } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -23,10 +23,14 @@ export default async function InterviewPrepPage() {
       <Tabs defaultValue="overview" className="space-y-6">
         
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview" className="data-[state=active]:bg-white">
               <BarChart className="h-4 w-4 mr-2 hidden md:inline" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="daily" className="data-[state=active]:bg-white">
+              <Calendar className="h-4 w-4 mr-2 hidden md:inline" />
+              Daily Quiz
             </TabsTrigger>
             <TabsTrigger value="oa" className="data-[state=active]:bg-white">
               <Code className="h-4 w-4 mr-2 hidden md:inline" />
@@ -70,6 +74,62 @@ export default async function InterviewPrepPage() {
               </Link>
             </div>
             <QuizList assessments={assessments} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="daily" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                  Daily Practice Quiz
+                </CardTitle>
+                <CardDescription>Quick daily questions to keep your skills sharp</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between text-sm mb-4">
+                  <div>
+                    <span className="font-semibold">Time Required:</span> 5-10 mins
+                  </div>
+                  <div>
+                    <span className="font-semibold">Questions:</span> 5
+                  </div>
+                </div>
+                <Link 
+                  href="/interview/mock"
+                  className="inline-flex items-center justify-center w-full rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                >
+                  Start Daily Practice
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-purple-600" />
+                  Daily Progress
+                </CardTitle>
+                <CardDescription>Track your daily practice performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between text-sm mb-4">
+                  <div>
+                    <span className="font-semibold">Streak:</span> 3 days
+                  </div>
+                  <div>
+                    <span className="font-semibold">Avg. Score:</span> 82%
+                  </div>
+                </div>
+                <Link 
+                  href="/interview/analytics"
+                  className="inline-flex items-center justify-center w-full rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                >
+                  View Progress
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
