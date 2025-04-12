@@ -89,19 +89,25 @@ function SelectLabel({
   );
 }
 
-function SelectItem({
-  className,
-  children,
-  ...props
-}) {
+const SelectItem = React.forwardRef(function SelectItem(
+  { className, children, ...props },
+  ref
+) {
+  // Ensure the value prop always exists and is not an empty string
+  const value = props.value || (typeof children === 'string' ? children : `item-${Math.random().toString(36).substr(2, 9)}`);
+  
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:h-full",
         className
       )}
-      {...props}>
+      // Spread props after ensuring value exists
+      {...props}
+      value={value}
+      ref={ref}
+    >
       <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
           <CheckIcon className="size-4" />
@@ -110,7 +116,8 @@ function SelectItem({
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   );
-}
+});
+SelectItem.displayName = SelectPrimitive.Item.displayName;
 
 function SelectSeparator({
   className,

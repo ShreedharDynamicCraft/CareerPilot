@@ -15,6 +15,7 @@ import {
   UserCircle,
   Settings,
   ListTodo,
+  BarChart3, // Replace BarChart3 with BarChart3
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -286,7 +287,7 @@ export default async function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/career-advice" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
                     <div className="p-2 bg-teal-100 text-teal-600 rounded-md group-hover:bg-teal-200 transition-all duration-200">
-                      <BarChart className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      <BarChart3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-800">AI Career Guidance</span>
