@@ -1,192 +1,256 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Briefcase, MapPin, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import JobCard from "./_components/job-card";
-import JobDetails from "./_components/job-details";
+import { Search, MapPin, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import JobCard from './_components/job-card';
+import JobDetails from './_components/job-details';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function JobSearchPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [location, setLocation] = useState("");
-  const [jobs, setJobs] = useState([]);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [jobRole, setJobRole] = useState(searchParams.get('job_role') || '');
+  const [location, setLocation] = useState(searchParams.get('location') || '');
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
+  const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [error, setError] = useState(null);
+  const [jobSources, setJobSources] = useState({
+    linkedin: 0,
+    indeed: 0,
+    other: 0
+  });
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Fetch jobs on initial load and when filters change
   useEffect(() => {
-    // Only fetch jobs when both search query and location are provided
-    if (!searchQuery || !location) return;
+    const initialJobRole = searchParams.get('job_role');
+    const initialLocation = searchParams.get('location');
     
-    const fetchJobs = async () => {
-      setLoading(true);
-      try {
-        // Call our API route that proxies to the backend scraper
-        const response = await fetch(
-          `/api/jobs/scrape-jobs?job_role=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(location)}`
-        );
-        
-        if (!response.ok) {
-          throw new Error(`API returned ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Filter by source if not "all"
-        let filteredJobs = data.jobs;
-        if (activeTab !== "all") {
-          filteredJobs = filteredJobs.filter(job => job.source.toLowerCase() === activeTab);
-        }
-        
-        setJobs(filteredJobs);
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (initialJobRole && initialLocation) {
+      fetchRecentJobs(initialJobRole, initialLocation);
+    }
+  }, [searchParams]);
 
-    fetchJobs();
-  }, [searchQuery, location, activeTab]);
+  const fetchRecentJobs = async (role, loc) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Request up to 30 jobs
+      const response = await fetch(`/api/jobs/recent-jobs?job_role=${encodeURIComponent(role)}&location=${encodeURIComponent(loc)}&limit=30`);
+      
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      
+      const data = await response.json();
+      setJobs(data.jobs || []);
+      setLastUpdated(new Date());
+      
+      // Count jobs by source
+      const sources = {
+        linkedin: data.sources?.linkedin || 0,
+        indeed: data.sources?.indeed || 0,
+        other: (data.jobs || []).length - ((data.sources?.linkedin || 0) + (data.sources?.indeed || 0))
+      };
+      
+      setJobSources(sources);
+      
+      // Show toast based on results
+      if (data.jobs && data.jobs.length > 0) {
+        toast.success(`Found ${data.jobs.length} recent job postings!`);
+      } else {
+        toast.error("No jobs found matching your criteria.");
+      }
+      
+    } catch (err) {
+      setError(err.message || "Failed to fetch recent job listings");
+      toast.error("Error searching for jobs", {
+        description: err.message || "Failed to fetch recent job listings"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Only trigger search if both fields have values
-    if (searchQuery && location) {
-      document.getElementById('search-results')?.scrollIntoView({ behavior: 'smooth' });
+    if (!jobRole || !location) {
+      toast.warning("Please enter both job title and location");
+      return;
+    }
+    
+    const params = new URLSearchParams();
+    params.set('job_role', jobRole);
+    params.set('location', location);
+    router.push(`/job-search?${params.toString()}`);
+    
+    fetchRecentJobs(jobRole, location);
+  };
+
+  const handleRefresh = () => {
+    const currentJobRole = searchParams.get('job_role');
+    const currentLocation = searchParams.get('location');
+    
+    if (currentJobRole && currentLocation) {
+      fetchRecentJobs(currentJobRole, currentLocation);
+      toast.info("Refreshing job listings...");
+    } else {
+      toast.warning("Please search for jobs first before refreshing");
+    }
+  };
+
+  const daysAgo = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const postedDate = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now - postedDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Check for invalid dates
+      if (isNaN(diffDays)) return "";
+      
+      return diffDays === 0 ? "Today" : diffDays === 1 ? "Yesterday" : `${diffDays} days ago`;
+    } catch (e) {
+      return "";
     }
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-6">
+    <div className="container mx-auto py-6 max-w-7xl">
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-            Simple Job Search
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Find recent job postings from multiple job sites in real-time
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold">Find Real-Time Job Opportunities</h1>
+          <p className="text-muted-foreground">
+            Search for the most recent job listings from LinkedIn and Indeed
           </p>
         </div>
 
-        {/* Search Form - Simplified */}
-        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <Input
-              type="text"
-              placeholder="Job title or role"
-              className="pl-10 py-6 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              required
-            />
-          </div>
-          <div className="relative flex-grow">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <Input
-              type="text"
-              placeholder="Location"
-              className="pl-10 py-6 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-            />
-          </div>
-          <Button 
-            type="submit" 
-            className="py-6 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg"
-            disabled={loading}
-          >
-            {loading ? "Searching..." : "Search Jobs"}
-          </Button>
-        </form>
+        {/* Search Form */}
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Job title, skill or keyword"
+                  className="pl-10"
+                  value={jobRole}
+                  onChange={(e) => setJobRole(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <div className="relative flex-1">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Location"
+                  className="pl-10"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <Button type="submit" className="h-10" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>Search Latest Jobs</>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-        {/* Main Content - Simplified */}
-        <div id="search-results">
-          {/* Tabs for job sources */}
-          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-6">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="all">All Sources</TabsTrigger>
-              <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
-              <TabsTrigger value="indeed">Indeed</TabsTrigger>
-              <TabsTrigger value="google">Google Jobs</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          {/* Results Count */}
-          <div className="mb-4">
-            <p className="text-muted-foreground">
-              {loading ? "Searching for jobs..." : jobs.length > 0 ? `${jobs.length} jobs found` : "Enter job role and location to search"}
-            </p>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            <p>{error}</p>
           </div>
+        )}
 
-          {/* Job Cards */}
+        {/* Actions & Source Breakdown */}
+        {jobs.length > 0 && (
+          <div className="flex flex-wrap justify-between items-center">
+            <div className="flex flex-wrap gap-2">
+              {jobSources.linkedin > 0 && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-800">LinkedIn: {jobSources.linkedin}</Badge>
+              )}
+              {jobSources.indeed > 0 && (
+                <Badge variant="outline" className="bg-red-50 text-red-800">Indeed: {jobSources.indeed}</Badge>
+              )}
+              {jobSources.other > 0 && (
+                <Badge variant="outline" className="bg-gray-50 text-gray-800">Other: {jobSources.other}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {lastUpdated && (
+                <span className="text-xs text-gray-500">
+                  Last updated: {lastUpdated.toLocaleTimeString()}
+                </span>
+              )}
+              <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={loading}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Results Section */}
+        {!loading && jobs.length > 0 && (
           <div className="space-y-4">
-            {loading ? (
-              // Loading skeletons
-              Array(5).fill(0).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <Skeleton className="h-12 w-12 rounded" />
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-5 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <div className="flex gap-2 mt-2">
-                          <Skeleton className="h-4 w-20" />
-                          <Skeleton className="h-4 w-20" />
-                          <Skeleton className="h-4 w-20" />
-                        </div>
-                        <Skeleton className="h-16 w-full mt-2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : jobs.length > 0 ? (
-              jobs.map((job) => (
+            <h2 className="text-xl font-semibold">
+              Recent Job Postings <Badge variant="outline">{jobs.length} jobs found</Badge>
+            </h2>
+            
+            <div className="grid gap-4">
+              {jobs.map((job) => (
                 <JobCard 
-                  key={job.id} 
+                  key={job.id || `${job.company}-${job.title}`.replace(/\s+/g,'-')} 
                   job={job} 
                   onClick={() => setSelectedJob(job)}
+                  daysAgo={daysAgo}
                 />
-              ))
-            ) : searchQuery && location ? (
-              <div className="text-center py-12">
-                <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No jobs found</h3>
-                <p className="text-gray-500">
-                  Try different search terms or locations
-                </p>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">Enter job role and location</h3>
-                <p className="text-gray-500">
-                  We'll search multiple job sites in real-time
-                </p>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center p-12 space-y-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Searching for the latest real-time job postings...</p>
+            <p className="text-xs text-muted-foreground">This may take a moment as we gather the most recent listings</p>
+          </div>
+        )}
+
+        {/* No Results */}
+        {!loading && jobs.length === 0 && searchParams.get('job_role') && (
+          <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-700 p-4">
+            <h3 className="font-medium">No job postings found</h3>
+            <p>We couldn't find any active job listings matching your search criteria. Try broadening your search terms or try a different location.</p>
+          </div>
+        )}
+
+        {/* Job Detail Dialog */}
+        <Dialog open={!!selectedJob} onOpenChange={(open) => !open && setSelectedJob(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            {selectedJob && <JobDetails job={selectedJob} />}
+          </DialogContent>
+        </Dialog>
       </div>
-      
-      {/* Job Details Dialog */}
-      {selectedJob && (
-        <JobDetails 
-          job={selectedJob} 
-          onClose={() => setSelectedJob(null)} 
-        />
-      )}
     </div>
   );
 }

@@ -12,7 +12,6 @@ import google.generativeai as genai
 from nltk.corpus import stopwords
 import uvicorn
 from typing import Dict
-from job_scraper import router as job_router
 
 
 
@@ -32,9 +31,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Include the job scraper router
-app.include_router(job_router, prefix="/api/jobs", tags=["jobs"])
 
 SAVE_DIR = "."
 
@@ -289,7 +285,30 @@ def analyze_projects(resume_text: str) -> Dict:
             "missing_elements": ["No projects detected"]
         }
 
+class ChatRequest(BaseModel):
+    message: str
 
+@app.post("/httpchat")
+async def chat(request: ChatRequest):
+    try:
+        bot_reply = generate_chat_response(request.message)
+        return {"response": bot_reply}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.websocket("/chat")
+async def websocket_chat(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            message = await websocket.receive_text()
+            if message.startswith("resume:"):
+                await websocket.send_text("Please upload your resume.")
+            else:
+                bot_reply = generate_chat_response(message)
+                await websocket.send_text(bot_reply)
+    except WebSocketDisconnect:
+        print("Client disconnected")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
