@@ -1087,29 +1087,7 @@ export default function ResumeBuilder({ initialContent }) {
             </Select>
           </div>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleAIEnhance('resume')}
-                  disabled={isEnhancing}
-                  className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-600 hover:from-purple-200 hover:to-indigo-200"
-                >
-                  {isEnhancing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 mr-2" />
-                  )}
-                  <span className="font-medium hidden md:inline">AI Enhance</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Use AI to improve your entire resume</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
+
           <Button
             variant="destructive"
             onClick={handleSubmit(onSubmit)}

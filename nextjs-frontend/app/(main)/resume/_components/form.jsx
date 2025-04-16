@@ -13,6 +13,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import {
   Select,
@@ -53,7 +54,9 @@ import {
   Check,
   AlertCircle,
   FileText,
-  Code
+  Code,
+  Upload,
+  InfoIcon
 } from "lucide-react";
 import { improveWithAI } from "@/actions/resume";
 import { toast } from "sonner";
@@ -93,6 +96,155 @@ const BULLET_TEMPLATES = {
     "Participated in {activity} as {role}",
     "Researched {topic} under {professor}, resulting in {outcome}"
   ]
+};
+
+const ProfileMediaSection = ({ data, onChange }) => {
+  const defaultProfilePic = "https://via.placeholder.com/150";
+  const defaultCollegeLogo = "https://via.placeholder.com/100";
+  
+  const [profilePicture, setProfilePicture] = useState(data?.profilePicture || defaultProfilePic);
+  const [collegeLogo, setCollegeLogo] = useState(data?.collegeLogo || defaultCollegeLogo);
+  const [collegeWebsite, setCollegeWebsite] = useState(data?.collegeWebsite || "");
+  
+  const handlePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newPicture = e.target.result;
+        setProfilePicture(newPicture);
+        onChange({
+          ...data,
+          profilePicture: newPicture
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newLogo = e.target.result;
+        setCollegeLogo(newLogo);
+        onChange({
+          ...data,
+          collegeLogo: newLogo
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleWebsiteChange = (e) => {
+    const website = e.target.value;
+    setCollegeWebsite(website);
+    onChange({
+      ...data,
+      collegeWebsite: website
+    });
+  };
+  
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          Profile Media
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">
+                  Some resume templates may use profile picture and institution logos.
+                  These are optional but can enhance professional templates.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </CardTitle>
+        <CardDescription>
+          Add profile picture and institution logos (optional)
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="space-y-2 flex-1">
+            <label className="block text-sm font-medium">Profile Picture</label>
+            <div className="flex items-center gap-4">
+              <img 
+                src={profilePicture} 
+                alt="Profile" 
+                className="w-16 h-16 object-cover rounded-full border"
+              />
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="profile-upload"
+                  onChange={handlePictureChange}
+                />
+                <label 
+                  htmlFor="profile-upload" 
+                  className="flex items-center gap-2 px-3 py-2 border rounded text-sm cursor-pointer hover:bg-gray-50"
+                >
+                  <Upload className="h-4 w-4" />
+                  Choose Image
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Used in professional templates
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-2 flex-1">
+            <label className="block text-sm font-medium">Institution Logo</label>
+            <div className="flex items-center gap-4">
+              <img 
+                src={collegeLogo} 
+                alt="Institution logo" 
+                className="w-16 h-16 object-contain border rounded p-1"
+              />
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="logo-upload"
+                  onChange={handleLogoChange}
+                />
+                <label 
+                  htmlFor="logo-upload" 
+                  className="flex items-center gap-2 px-3 py-2 border rounded text-sm cursor-pointer hover:bg-gray-50"
+                >
+                  <Upload className="h-4 w-4" />
+                  Choose Logo
+                </label>
+                <div className="mt-2">
+                  <label className="block text-xs text-muted-foreground">Institution Website</label>
+                  <input
+                    type="url"
+                    value={collegeWebsite}
+                    onChange={handleWebsiteChange}
+                    placeholder="https://university.edu"
+                    className="mt-1 w-full text-sm p-2 border rounded"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+          Note: These options are only used in certain templates. You can preview how they look in different styles using the template selector.
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 export const EntryForm = ({ type, entries = [], onChange }) => {

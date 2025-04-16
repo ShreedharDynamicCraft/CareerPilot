@@ -28,7 +28,7 @@ export const generatePDF = async (htmlContent) => {
       },
       scale: 0.9 // Slightly reduce scale to prevent clipping
     });
-console.log('processing')
+    
     return pdfBuffer;
   } catch (error) {
     console.error('PDF generation error:', error);
@@ -39,7 +39,6 @@ console.log('processing')
     }
   }
 };
-
 
 // // for vercel only 
 // // actions/generate-pdf.js
@@ -54,7 +53,6 @@ console.log('processing')
 //       executablePath: await chromium.executablePath(),
 //       headless: chromium.headless,
 //     });
-
 //     const page = await browser.newPage();
 //     await page.setContent(htmlContent);
     
