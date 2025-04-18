@@ -1,4 +1,4 @@
-\"use client";
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Code, CheckCircle, XCircle, BookOpen, Terminal, Bug, Timer, Clock, AlertCircle, Zap, BarChart, Brain, Target } from "lucide-react";
+import { Code, CheckCircle, XCircle, BookOpen, Terminal, Bug, Timer, Clock, AlertCircle, Zap, BarChart, Brain, Target, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Dynamically import Monaco Editor to avoid SSR issues
+// Dynamically import Monaco Editor to avoid SSR issues like "window is not defined"
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
 });
@@ -42,21 +42,25 @@ export default function CodingPracticePage() {
   useEffect(() => {
     if (isTimerRunning) {
       timerRef.current = setInterval(() => {
-        setTimeSpent((prev) => prev + 1);
-        
-        // Show warning when approaching time thresholds
-        if (prev === 300) { // 5 minutes
-          toast({
-            title: "Time Check",
-            description: "You've been working for 5 minutes. Keep going!",
-          });
-        } else if (prev === 900) { // 15 minutes
-          toast({
-            title: "Time Check",
-            description: "15 minutes have passed. Consider reviewing your approach if stuck.",
-            variant: "warning",
-          });
-        }
+        setTimeSpent((prev) => {
+          const updatedTime = prev + 1;
+          
+          // Show warning when approaching time thresholds
+          if (updatedTime === 300) { // 5 minutes
+            toast({
+              title: "Time Check",
+              description: "You've been working for 5 minutes. Keep going!",
+            });
+          } else if (updatedTime === 900) { // 15 minutes
+            toast({
+              title: "Time Check",
+              description: "15 minutes have passed. Consider reviewing your approach if stuck.",
+              variant: "warning",
+            });
+          }
+          
+          return updatedTime;
+        });
       }, 1000);
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -425,24 +429,24 @@ export default function CodingPracticePage() {
                       <TabsTrigger value="problem" className="data-[state=active]:bg-background">
                         <BookOpen className="h-4 w-4 mr-2" />
                         Problem
-                      </Tabs>Trigger>
+                      </TabsTrigger>
                       <TabsTrigger value="code" className="data-[state=active]:bg-background">
                         <Code className="h-4 w-4 mr-2" />
                         Code
-                      </Tabs>Trigger>
+                      </TabsTrigger>
                       <TabsTrigger value="test-cases" className="data-[state=active]:bg-background">
                         <Terminal className="h-4 w-4 mr-2" />
                         Test Cases
-                      </Tabs>Trigger>
+                      </TabsTrigger>
                       {results && (
                         <TabsTrigger value="results" className="data-[state=active]:bg-background">
                           <BarChart className="h-4 w-4 mr-2" />
                           Results
-                        </Tabs>Trigger>
+                        </TabsTrigger>
                       )}
-                    </Tabs>List>
+                    </TabsList>
                   </div>
-
+                  
                   <TabsContent value="problem" className="p-4 h-[calc(100%-2.5rem)] overflow-auto">
                     <ScrollArea className="h-full pr-4">
                       <div className="space-y-4">
@@ -494,10 +498,10 @@ export default function CodingPracticePage() {
                         </div>
                       </div>
                     </ScrollArea>
-                  </Tabs>Content>
+                  </TabsContent>
 
                   <TabsContent value="code" className="h-[calc(100%-2.5rem)]">
-                    <div className="h-[calc(100%-3.5rem)]">
+                    <div className="h-[calc(100vh-12rem)] md:h-[600px] relative">
                       <MonacoEditor
                         height="100%"
                         defaultLanguage="cpp"
@@ -515,24 +519,24 @@ export default function CodingPracticePage() {
                           suggestOnTriggerCharacters: true,
                         }}
                       />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background">
+                        <Button
+                          onClick={submitSolution}
+                          disabled={isSubmitting}
+                          className="w-full"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Running...
+                            </>
+                          ) : (
+                            <>Run Solution</>  
+                          )}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="p-4 border-t">
-                      <Button
-                        onClick={submitSolution}
-                        disabled={isSubmitting}
-                        className="w-full"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Running...
-                          </>
-                        ) : (
-                          <>Run Solution</>  
-                        )}
-                      </Button>
-                    </div>
-                  </Tabs>Content>
+                  </TabsContent>
 
                   <TabsContent value="test-cases" className="p-4 h-[calc(100%-2.5rem)] overflow-auto">
                     <ScrollArea className="h-full pr-4">
@@ -585,7 +589,7 @@ export default function CodingPracticePage() {
                         ))}
                       </div>
                     </ScrollArea>
-                  </Tabs>Content>
+                  </TabsContent>
 
                   {results && (
                     <TabsContent value="results" className="p-4 h-[calc(100%-2.5rem)] overflow-auto">
@@ -701,10 +705,29 @@ export default function CodingPracticePage() {
                           </Card>
                         </div>
                       </ScrollArea>
-                    </Tabs>Content>
+                    </TabsContent>
                   )}
                 </Tabs>
-
-
-
-          }
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="h-full flex items-center justify-center">
+              <CardContent className="py-12 text-center">
+                <div className="mx-auto w-16 h-16 mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Brain className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No Problem Loaded</h3>
+                <p className="text-muted-foreground mb-6">
+                  Select your preferences and click "Load Problem" to start practicing.
+                </p>
+                <Button onClick={loadProblem} className="mx-auto">
+                  Load Random Problem
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
