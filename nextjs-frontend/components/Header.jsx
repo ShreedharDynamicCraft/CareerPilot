@@ -282,7 +282,7 @@ export default async function Header() {
                   </Link>
                 </DropdownMenuItem> */}
                 {/* Growth Tools Items Merged Here */}
-     
+{/*      
 
                 <DropdownMenuItem asChild>
                   <Link href="/career-advice" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
@@ -294,7 +294,7 @@ export default async function Header() {
                       <span className="text-xs text-gray-500">Get personalized career advice</span>
                     </div>
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
 
 
 

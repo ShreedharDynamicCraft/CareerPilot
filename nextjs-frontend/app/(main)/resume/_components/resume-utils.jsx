@@ -113,4 +113,4 @@ export const getCombinedContent = (formValues, user) => {
     achievements && `## Achievements & Certifications\n\n${achievements.split('\n').map(a => `- ${a.trim()}`).join('\n')}`,
     languages && `## Languages\n\n${languages.split(',').map(l => `- ${l.trim()}`).join('\n')}`,
   ].filter(Boolean).join('\n\n');
-};
+};w

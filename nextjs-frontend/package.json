@@ -40,7 +40,7 @@
     "clsx": "^2.0.0",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
-    "framer-motion": "^12.6.0",
+    "framer-motion": "^12.7.4",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
     "inngest": "^3.32.9",
