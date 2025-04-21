@@ -59,3 +59,5 @@ uritemplate==4.1.1
 urllib3==2.4.0
 uvicorn==0.34.2
 xgboost==3.0.0
+gunicorn
+
