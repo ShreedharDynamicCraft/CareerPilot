@@ -57,7 +57,7 @@ def clean_text(text):
 def read_root():
     return {"message": "Welcome to FastAPI application. Proceed to /docs to view available functions"}
 
-@app.post("/upload_resume/")
+@app.post("/upload_resume/")    
 async def upload_resume(file: UploadFile = File(...)):
     file_extension = file.filename.split(".")[-1].lower()
     file_content = await file.read()
