@@ -1,13 +1,46 @@
-import axios from 'axios'
-import * as cheerio from 'cheerio'
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+
+// Function to extract internship details from a Cheerio element
+const extractInternshipDetails = ($, element, baseUrl) => {
+  const titleElement = $(element).find('h3.heading_4_5 a, div.internship_meta .profile a');
+  const title = titleElement.text().trim();
+  const companyElement = $(element).find('div.heading_6 a, div.company_name a');
+  const company = companyElement.text().trim();
+  const location = $(element).find('a.location_link').text().trim();
+  const stipendElement = $(element).find('.stipend');
+  const stipend = stipendElement.text().trim();
+  const applyLink = titleElement.attr('href') || '#';
+  const fullLink = applyLink.startsWith('http') ? applyLink : `${baseUrl}${applyLink}`; // Use baseUrl
+  const durationElement = $(element).find('.item_body:contains("Duration")');
+  const duration = durationElement.text().trim() || $(element).find('.other_detail_item_row:contains("Duration")').text().replace('Duration', '').trim();
+  const postedDateElement = $(element).find('.status-container .status.status-small');
+  const postedDate = postedDateElement.text().trim() || $(element).find('.posted_immediately').text().trim() || 'Recently';
+
+  if (title && company) {
+    return {
+      id: `internshala-${applyLink.split('/').pop() || Math.random().toString(36).substring(2, 10)}`,
+      title,
+      company,
+      location: location || 'India',
+      postedDate: postedDate.includes('ago') || postedDate.includes('day') || postedDate === 'Just Applied' || postedDate === 'Be an early applicant' ? postedDate : 'Recently',
+      applyLink: fullLink,
+      stipend: stipend || 'Not specified',
+      duration: duration || 'Not specified',
+      platform: 'Internshala'
+    };
+  }
+  return null;
+};
 
 export async function scrapeInternshalaJobs(role, location = '') {
+  const baseUrl = 'https://internshala.com';
   try {
-    // Ensure we're using the India-specific URL format and add sorting by date
-    const searchQuery = encodeURIComponent(role)
-    const locationQuery = location ? `&location=${encodeURIComponent(location)}` : ''
-    // Added sort by latest and internships in India
-    const url = `https://internshala.com/internships/${searchQuery}-internships-in-india${locationQuery}/sort-latest`
+    const searchQuery = encodeURIComponent(role);
+    const locationQuery = location ? `&location_names=${encodeURIComponent(location)}` : ''; // Updated param name
+    // Use a more general search URL and sort by date
+    const url = `${baseUrl}/internships/keywords-${searchQuery}${locationQuery}/sort-latest/`;
+    console.log(`Scraping Internshala URL: ${url}`);
 
     const { data } = await axios.get(url, {
       headers: {
@@ -15,97 +48,74 @@ export async function scrapeInternshalaJobs(role, location = '') {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
         'Referer': 'https://www.google.com/',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'cross-site',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1'
       },
-      timeout: 10000
-    })
+      timeout: 15000 // Increased timeout
+    });
 
-    const $ = cheerio.load(data)
-    const jobs = []
+    const $ = cheerio.load(data);
+    let jobs = [];
 
-    // Try different selectors that might match internship listings
-    const selectors = ['.internship_meta', '.individual_internship', '.container-fluid .internship_list']
-    
-    selectors.forEach(selector => {
-      $(selector).each((_, element) => {
-        const title = $(element).find('.heading_4_5 a, .profile, .internship-heading a').text().trim()
-        const company = $(element).find('.heading_6 a, .company_name, .company-heading a').text().trim()
-        const location = $(element).find('.location_link, .location, .location_text').text().trim()
-        const stipend = $(element).find('.stipend, .stipend-container').text().trim()
-        const applyLink = $(element).find('.heading_4_5 a, .profile a, .internship-heading a').attr('href') || '#'
-        const fullLink = applyLink.startsWith('http') ? applyLink : `https://internshala.com${applyLink}`
-        const duration = $(element).find('.other_detail_item_row:contains("Duration"), .duration').text().replace('Duration', '').trim()
-        const postedDate = $(element).find('.posted_date_container, .posted-date').text().trim() || 'Recently'
-        
-        if (title && company) {
-          jobs.push({
-            id: `internshala-${Math.random().toString(36).substring(2, 10)}`,
-            title,
-            company,
-            location: location || 'India',
-            postedDate: postedDate.includes('ago') ? postedDate : 'Recently',
-            applyLink: fullLink,
-            stipend: stipend || '₹5,000 - ₹10,000 /month',
-            duration: duration || '3-6 months',
-            platform: 'Internshala'
-          })
-        }
-      })
-    })
+    // Updated selector based on potential Internshala structure
+    const internshipCardSelector = 'div.internship_meta'; // Primary container for each internship
 
-    // If fewer than 30 jobs, try to fetch page 2
-    if (jobs.length < 30) {
-      try {
-        const page2Url = `https://internshala.com/internships/${searchQuery}-internships-in-india${locationQuery}/page-2`
-        const page2Response = await axios.get(page2Url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': url
-          }
-        })
-        
-        const $page2 = cheerio.load(page2Response.data)
-        
-        selectors.forEach(selector => {
-          $page2(selector).each((_, element) => {
-            const title = $page2(element).find('.heading_4_5 a, .profile, .internship-heading a').text().trim()
-            const company = $page2(element).find('.heading_6 a, .company_name, .company-heading a').text().trim()
-            const location = $page2(element).find('.location_link, .location, .location_text').text().trim()
-            const stipend = $page2(element).find('.stipend, .stipend-container').text().trim()
-            const applyLink = $page2(element).find('.heading_4_5 a, .profile a, .internship-heading a').attr('href') || '#'
-            const fullLink = applyLink.startsWith('http') ? applyLink : `https://internshala.com${applyLink}`
-            const duration = $page2(element).find('.other_detail_item_row:contains("Duration"), .duration').text().replace('Duration', '').trim()
-            const postedDate = $page2(element).find('.posted_date_container, .posted-date').text().trim() || 'Recently'
-            
-            if (title && company) {
-              jobs.push({
-                id: `internshala-${Math.random().toString(36).substring(2, 10)}`,
-                title,
-                company,
-                location: location || 'India',
-                postedDate: postedDate.includes('ago') ? postedDate : 'Recently',
-                applyLink: fullLink,
-                stipend: stipend || '₹5,000 - ₹10,000 /month',
-                duration: duration || '3-6 months',
-                platform: 'Internshala'
-              })
-            }
-          })
-        })
-      } catch (page2Error) {
-        console.warn('Failed to fetch page 2 from Internshala:', page2Error.message)
+    $(internshipCardSelector).each((_, element) => {
+      const internshipDetails = extractInternshipDetails($, element, baseUrl);
+      if (internshipDetails) {
+        jobs.push(internshipDetails);
       }
-    }
+    });
 
-    // Return only actual scraped jobs
-    console.log(`Found ${jobs.length} real Internshala jobs`);
+    // Deduplicate jobs based on applyLink
+    jobs = jobs.filter((job, index, self) =>
+      index === self.findIndex((j) => (j.applyLink === job.applyLink))
+    );
+
+    console.log(`Found ${jobs.length} Internshala jobs after initial scrape and deduplication.`);
+
+    // Optional: Try fetching page 2 if needed (less reliable)
+    // if (jobs.length < 15) { // Reduced threshold
+    //   try {
+    //     const page2Url = `${baseUrl}/internships/keywords-${searchQuery}${locationQuery}/page-2/`;
+    //     console.log(`Fetching second page: ${page2Url}`);
+    //     const page2Response = await axios.get(page2Url, { headers: { /* ... same headers ... */ }, timeout: 15000 });
+    //     const $page2 = cheerio.load(page2Response.data);
+    //     $page2(internshipCardSelector).each((_, element) => {
+    //       const internshipDetails = extractInternshipDetails($page2, element, baseUrl);
+    //       if (internshipDetails) {
+    //         jobs.push(internshipDetails);
+    //       }
+    //     });
+    //     // Deduplicate again
+    //     jobs = jobs.filter((job, index, self) => index === self.findIndex((j) => (j.applyLink === job.applyLink)));
+    //     console.log(`Found ${jobs.length} Internshala jobs after second page scrape.`);
+    //   } catch (page2Error) {
+    //     console.warn(`Failed to fetch page 2 from Internshala: ${page2Error.message}`);
+    //     if (page2Error.response) {
+    //       console.warn(`Internshala second page status: ${page2Error.response.status}`);
+    //     }
+    //   }
+    // }
+
     return jobs;
-    
+
   } catch (error) {
-    console.error('Internshala scraping error:', error)
-    // Return empty array instead of mock data
-    return [];
+    console.error(`Internshala scraping error for role='${role}', location='${location}':`, error.message);
+    if (error.response) {
+      console.error(`Internshala response status: ${error.response.status}`);
+      // console.error('Internshala response headers:', error.response.headers);
+      // console.error('Internshala response data snippet:', error.response.data.substring(0, 500)); // Log snippet
+    } else if (error.request) {
+      console.error('Internshala request error: No response received.');
+    } else {
+      console.error('Internshala setup error:', error.message);
+    }
+    return []; // Return empty array on error
   }
 }

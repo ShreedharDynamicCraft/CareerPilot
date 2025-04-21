@@ -125,21 +125,49 @@ const ResumeAnalyzer = () => {
       const formData = new FormData(); 
       formData.append("file", file.raw);
       
-      // Use Promise.all for concurrent API requests
+
+      // Use local server for development 
+      
+      // const [analysisRes, skillsRes, predictionRes] = await Promise.all([
+      //   axios.post("http://127.0.0.1:8000/upload_resume/", formData, {
+      //     timeout: 30000, // 30 second timeout
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   }),
+      //   axios.post("http://127.0.0.1:8000/analyze_skills/", formData, {
+      //     timeout: 30000,
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   }),
+      //   axios.post("http://127.0.0.1:8000/predict_job_role/", formData, {
+      //     timeout: 30000,
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   }),
+      // ]);
+      
+
+
+
+      const baseURL = "https://careerpilot-jm7u.onrender.com"; // hosted one 
+
       const [analysisRes, skillsRes, predictionRes] = await Promise.all([
-        axios.post("http://127.0.0.1:8000/upload_resume/", formData, {
-          timeout: 30000, // 30 second timeout
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }),
-        axios.post("http://127.0.0.1:8000/analyze_skills/", formData, {
+        axios.post(`${baseURL}/upload_resume/`, formData, {
           timeout: 30000,
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         }),
-        axios.post("http://127.0.0.1:8000/predict_job_role/", formData, {
+        axios.post(`${baseURL}/analyze_skills/`, formData, {
+          timeout: 30000,
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }),
+        axios.post(`${baseURL}/predict_job_role/`, formData, {
           timeout: 30000,
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -147,6 +175,12 @@ const ResumeAnalyzer = () => {
         }),
       ]);
       
+
+
+
+
+
+
       // Combine all analysis results
       setTextAnalysis({
         ...analysisRes.data.analysis,
