@@ -38,7 +38,7 @@ export default async function Header() {
       
       
       
-        <Link href="/" className="relative group">
+        {/* <Link href="/" className="relative group">
           <div className="overflow-hidden relative">
             <Image
               src={"/logo.png"}
@@ -49,7 +49,27 @@ export default async function Header() {
             />
             <div className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 group-hover:w-full"></div>
           </div>
-        </Link>
+        </Link> */}
+
+
+<Link href="/" className="relative group block overflow-hidden">
+      <div className="relative h-12 py-1 flex items-center">
+        {/* Animated floating balls */}
+        <div className="absolute -left-1 top-1 w-4 h-4 rounded-full bg-blue-500 opacity-70 animate-pulse"></div>
+        <div className="absolute left-1 -top-1 w-3 h-3 rounded-full bg-indigo-600 opacity-60 animate-bounce"></div>
+        <div className="absolute right-0 top-2 w-3 h-3 rounded-full bg-purple-500 opacity-70 animate-ping"></div>
+        <div className="absolute right-3 bottom-1 w-2 h-2 rounded-full bg-blue-400 opacity-80 animate-pulse"></div>
+        
+        {/* Text with gradient effect */}
+        <div className="font-bold text-3xl tracking-tight">
+          <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-gradient">Career</span>
+          <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent animate-gradient">Pilot</span>
+        </div>
+      </div>
+      
+      {/* Animated underline */}
+      <div className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 group-hover:w-full"></div>
+    </Link>
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-4">
@@ -175,7 +195,9 @@ export default async function Header() {
     {/* Hover Effect Background */}
     <div className="absolute inset-0 bg-gradient-to-r from-purple-100/50 
       to-pink-100/50 opacity-0 group-hover:opacity-100 
-      transition-opacity duration-300"></div>
+      transition-opacity duration-300">
+        
+      </div>
   </Button>
 </Link>
 
