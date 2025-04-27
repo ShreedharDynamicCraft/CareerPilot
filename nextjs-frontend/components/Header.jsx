@@ -32,7 +32,7 @@ export default async function Header() {
   await checkUser();
 
   return (
-    <header className="fixed top-0 w-full border-b bg-background/80 backdrop-blur-md z-50 shadow-md">
+    <header className="fixed top-0 w-full border-b  bg-background/80 backdrop-blur-md z-50 shadow-md ">
       <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
       
       
@@ -103,6 +103,9 @@ export default async function Header() {
                     group-hover:translate-x-1" />
                 </div>
                 
+
+
+
                 {/* Notification Dot */}
                 <span className="absolute -top-1 -right-1 flex h-2 w-2">
                   <span className="absolute inline-flex w-full h-full rounded-full 
@@ -119,7 +122,82 @@ export default async function Header() {
             </Link>
 
 
+  <DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button className="relative overflow-hidden group flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white transition-all duration-500 border-none shadow-md hover:shadow-xl transform hover:-translate-y-1">
+      <Briefcase className="h-4 w-4 transform transition-all duration-300 group-hover:rotate-12 group-hover:scale-110" />
+      <span className="hidden md:block relative z-10 font-medium tracking-wide">CareerPilot</span>
+      <ChevronDown className="h-4 w-4 transition-transform duration-500 group-hover:rotate-180" />
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+      <div className="absolute bottom-0 left-0 w-0 h-1 bg-white transition-all duration-500 group-hover:w-full"></div>
+      <div className="absolute top-0 right-0 w-0 h-1 bg-white transition-all duration-500 group-hover:w-full delay-100"></div>
+    </Button>
+  </DropdownMenuTrigger>
+  
+  <DropdownMenuContent align="end" className="w-64 shadow-2xl rounded-lg border border-blue-100 bg-white p-2 mt-2 overflow-hidden origin-top-right animate-in fade-in slide-in-from-top-2 duration-300">
+    
+    <DropdownMenuItem asChild>
+      <Link href="/resume" className="flex items-center gap-3 hover:bg-blue-50 p-3 rounded-lg group transition-all duration-300 hover:shadow-md">
+        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+          <FileText className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+        </div>
+        <div className="flex flex-col transition-all duration-300 group-hover:translate-x-1">
+          <span className="font-medium text-gray-800 group-hover:text-blue-700">Build Resume</span>
+          <span className="text-xs text-gray-500 group-hover:text-blue-500">Create a professional resume</span>
+        </div>
+      </Link>
+    </DropdownMenuItem>
 
+    <DropdownMenuItem asChild>
+      <Link href="/cover-letter" className="flex items-center gap-3 hover:bg-indigo-50 p-3 rounded-lg group transition-all duration-300 hover:shadow-md">
+        <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+          <PenBox className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+        </div>
+        <div className="flex flex-col transition-all duration-300 group-hover:translate-x-1">
+          <span className="font-medium text-gray-800 group-hover:text-indigo-700">Cover Letter</span>
+          <span className="text-xs text-gray-500 group-hover:text-indigo-500">Craft compelling cover letters</span>
+        </div>
+      </Link>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem asChild>
+      <Link href="/resume-analysis" className="flex items-center gap-3 hover:bg-purple-50 p-3 rounded-lg group transition-all duration-300 hover:shadow-md">
+        <div className="p-2 bg-purple-100 text-purple-600 rounded-lg group-hover:bg-purple-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+          <FileText className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+        </div>
+        <div className="flex flex-col transition-all duration-300 group-hover:translate-x-1">
+          <span className="font-medium text-gray-800 group-hover:text-purple-700">Resume Analysis</span>
+          <span className="text-xs text-gray-500 group-hover:text-purple-500">Get feedback on your resume</span>
+        </div>
+      </Link>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem asChild>
+      <Link href="/interview" className="flex items-center gap-3 hover:bg-green-50 p-3 rounded-lg group transition-all duration-300 hover:shadow-md">
+        <div className="p-2 bg-green-100 text-green-600 rounded-lg group-hover:bg-green-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+          <GraduationCap className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+        </div>
+        <div className="flex flex-col transition-all duration-300 group-hover:translate-x-1">
+          <span className="font-medium text-gray-800 group-hover:text-green-700">Interview Prep</span>
+          <span className="text-xs text-gray-500 group-hover:text-green-500">Practice interview questions</span>
+        </div>
+      </Link>
+    </DropdownMenuItem>
+
+    <DropdownMenuItem asChild>
+      <Link href="/job-search" className="flex items-center gap-3 hover:bg-amber-50 p-3 rounded-lg group transition-all duration-300 hover:shadow-md">
+        <div className="p-2 bg-amber-100 text-amber-600 rounded-lg group-hover:bg-amber-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+          <Search className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+        </div>
+        <div className="flex flex-col transition-all duration-300 group-hover:translate-x-1">
+          <span className="font-medium text-gray-800 group-hover:text-amber-700">Smart Job Search</span>
+          <span className="text-xs text-gray-500 group-hover:text-amber-500">Find the perfect job match</span>
+        </div>
+      </Link>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+        
 
 
 <Link href="/dashboard" className="relative group">
@@ -164,6 +242,11 @@ export default async function Header() {
   </Button>
 </Link>
 
+
+
+
+
+
 {/* Career Profile Button */}
 <Link href="/carrierform" className="relative group">
   <Button 
@@ -203,126 +286,6 @@ export default async function Header() {
 
 
             {/* CareerPilot Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="relative overflow-hidden group flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white transition-all duration-300 border-none shadow-md hover:shadow-lg">
-                  <Briefcase className="h-4 w-4 transform transition-all duration-300 group-hover:rotate-12" />
-                  <span className="hidden md:block relative z-10">CareerPilot</span>
-                  <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:rotate-180" />
-                  <div className="absolute top-0 left-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                  <div className="absolute bottom-0 left-0 w-0 h-1 bg-white transition-all duration-300 group-hover:w-full"></div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 shadow-xl rounded-lg border bg-white p-1 mt-1 overflow-hidden">
-              
-              <DropdownMenuItem asChild>
-                  <Link href="/resume" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded-md group-hover:bg-blue-200 transition-all duration-200">
-                      <FileText className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">Build Resume</span>
-                      <span className="text-xs text-gray-500">Create a professional resume</span>
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href="/cover-letter" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
-                    <div className="p-2 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-200 transition-all duration-200">
-                      <PenBox className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">Cover Letter</span>
-                      <span className="text-xs text-gray-500">Craft compelling cover letters</span>
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-             
-
-
-                <DropdownMenuItem asChild>
-                  <Link href="/resume-analysis" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
-                    <div className="p-2 bg-purple-100 text-purple-600 rounded-md group-hover:bg-purple-200 transition-all duration-200">
-                      <FileText className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">Resume Analysis</span>
-                      <span className="text-xs text-gray-500">Get feedback on your resume</span>
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href="/interview" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
-                    <div className="p-2 bg-green-100 text-green-600 rounded-md group-hover:bg-green-200 transition-all duration-200">
-                      <GraduationCap className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">Interview Prep</span>
-                      <span className="text-xs text-gray-500">Practice interview questions</span>
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-
-
-
-                <DropdownMenuItem asChild>
-                  <Link href="/job-search" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
-                    <div className="p-2 bg-amber-100 text-amber-600 rounded-md group-hover:bg-amber-200 transition-all duration-200">
-                      <Search className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">Smart Job Search</span>
-                      <span className="text-xs text-gray-500">Find the perfect job match</span>
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
-
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/skill-up" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <GraduationCap className="h-4 w-4" />
-                    Skill Up for Promotion
-                  </Link>
-                </DropdownMenuItem> */}
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/networking" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <Users className="h-4 w-4" />
-                    Networking Assistant
-                  </Link>
-                </DropdownMenuItem> */}
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/freelance-jobs" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <Briefcase className="h-4 w-4" />
-                    Freelance & Remote Jobs
-                  </Link>
-                </DropdownMenuItem> */}
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/internship-finder" className="flex items-center gap-2 hover:bg-gray-200 p-2 rounded-md">
-                    <GraduationCap className="h-4 w-4" />
-                    Internship Finder
-                  </Link>
-                </DropdownMenuItem> */}
-                {/* Growth Tools Items Merged Here */}
-{/*      
-
-                <DropdownMenuItem asChild>
-                  <Link href="/career-advice" className="flex items-center gap-2 hover:bg-blue-50 p-3 rounded-md group transition-all duration-200">
-                    <div className="p-2 bg-teal-100 text-teal-600 rounded-md group-hover:bg-teal-200 transition-all duration-200">
-                      <BarChart3 className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">AI Career Guidance</span>
-                      <span className="text-xs text-gray-500">Get personalized career advice</span>
-                    </div>
-                  </Link>
-                </DropdownMenuItem> */}
-
-
-
-              </DropdownMenuContent>
-            </DropdownMenu>
-        
         
         
           </SignedIn>

@@ -128,52 +128,52 @@ const ResumeAnalyzer = () => {
 
       // Use local server for development 
       
-      // const [analysisRes, skillsRes, predictionRes] = await Promise.all([
-      //   axios.post("http://127.0.0.1:8000/upload_resume/", formData, {
-      //     timeout: 30000, // 30 second timeout
-      //     headers: {
-      //       'Content-Type': 'multipart/form-data'
-      //     }
-      //   }),
-      //   axios.post("http://127.0.0.1:8000/analyze_skills/", formData, {
-      //     timeout: 30000,
-      //     headers: {
-      //       'Content-Type': 'multipart/form-data'
-      //     }
-      //   }),
-      //   axios.post("http://127.0.0.1:8000/predict_job_role/", formData, {
-      //     timeout: 30000,
-      //     headers: {
-      //       'Content-Type': 'multipart/form-data'
-      //     }
-      //   }),
-      // ]);
-      
-
-
-
-      const baseURL = "https://careerpilot-jm7u.onrender.com"; // hosted one 
-
       const [analysisRes, skillsRes, predictionRes] = await Promise.all([
-        axios.post(`${baseURL}/upload_resume/`, formData, {
+        axios.post("http://127.0.0.1:8000/upload_resume/", formData, {
+          timeout: 30000, // 30 second timeout
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }),
+        axios.post("http://127.0.0.1:8000/analyze_skills/", formData, {
           timeout: 30000,
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         }),
-        axios.post(`${baseURL}/analyze_skills/`, formData, {
-          timeout: 30000,
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }),
-        axios.post(`${baseURL}/predict_job_role/`, formData, {
+        axios.post("http://127.0.0.1:8000/predict_job_role/", formData, {
           timeout: 30000,
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         }),
       ]);
+      
+
+
+
+      // const baseURL = "https://careerpilot-jm7u.onrender.com"; // hosted one 
+
+      // const [analysisRes, skillsRes, predictionRes] = await Promise.all([
+      //   axios.post(`${baseURL}/upload_resume/`, formData, {
+      //     timeout: 1130000,
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   }),
+      //   axios.post(`${baseURL}/analyze_skills/`, formData, {
+      //     timeout: 1130000,
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   }),
+      //   axios.post(`${baseURL}/predict_job_role/`, formData, {
+      //     timeout: 1130000,
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   }),
+      // ]);
       
 
 
