@@ -18,32 +18,32 @@ CareerPilot is an AI-powered career guidance platform designed to help job seeke
 - Job role prediction based on resume content
 
 ### 🔍 Smart Job Search
-![Job Portal](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/Job_Portal.png)
+![Job Portal](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/cp/Docs%20and%20media/images/Job_Portal.png)
 - Aggregated job listings from multiple platforms (LinkedIn, Indeed)
 - Personalized job recommendations based on user profile
 - Real-time job market insights
 
 ### 🎯 Dashboard & Insights
-![Career Dashboard](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/Carrer_Dashboard.png)
+![Career Dashboard](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/cp/Docs%20and%20media/images/Carrer_Dashboard.png)
 - Personalized career progression tracking
 - Skills and performance analytics
 - Goal setting and achievement monitoring
 
 ### 🎙️ AI Interview Preparation
-![Interview Practice](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/Interview.png)
+![Interview Practice](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/cp/Docs%20and%20media/images/Interview.png)
 - Video interview practice with AI feedback
 - Technical and behavioral interview question generation
 - Performance analysis and improvement recommendations
 
 ### 📊 ML-Powered Job Prediction
-![ML Prediction](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/ML_prediciton.png)
+![ML Prediction](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/cp/Docs%20and%20media/images/ML_prediciton.png)
 - AI algorithms to match your skills with relevant job roles
 - Career path suggestions based on your profile
 - Model accuracy comparison for optimal recommendations
-![Model Accuracy](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/model_accuracy_comparison.png)
+![Model Accuracy](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/cp/Docs%20and%20media/images/model_accuracy_comparison.png)
 
 ### ✅ Task Management
-![Todo Management](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/Todo.png)
+![Todo Management](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/cp/Docs%20and%20media/images/Todo.png)
 - Job application tracking
 - Interview preparation checklists
 - Career development task management
