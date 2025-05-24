@@ -11,7 +11,7 @@ CareerPilot is an AI-powered career guidance platform designed to help job seeke
 ## ✨ Key Features
 
 ### 📄 Resume Builder & Analysis
-![Resume Analysis](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/Resume_Analyis.png)
+![Resume Analysis](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/cp/Docs%20and%20media/images/Resume_Analyis.png)
 - Create professional resumes with customizable templates
 - AI-powered resume analysis providing feedback on structure and content
 - Skills gap identification and improvement recommendations
