@@ -1,28 +1,14 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/resume(.*)",
-  "/interview(.*)",
-  "/cover-letter(.*)",
-  "/resume-analyzer(.*)",    
-  "/careerform(.*)",  
-]);
-
-export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
-
-  if (!userId && isProtectedRoute(req)) {
-    const { redirectToSignIn } = await auth();
-    return redirectToSignIn();
-  }
-
+export function middleware(request) {
+  // Clerk authentication removed due to Edge runtime incompatibility.
+  // Add simple rewrites/redirects here if needed in the future.
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
+    // You can specify matchers here if you want to run middleware on specific routes
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
