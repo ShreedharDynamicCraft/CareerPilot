@@ -1,0 +1,17 @@
+// This file is causing a conflict with the App Router version
+// We're commenting out the entire file content and will delete it later
+/*
+export default async function handler(req, res) {
+  // Simplified implementation for deployment
+  return res.status(200).json({ 
+    success: true, 
+    message: "This is a placeholder for the industry update CRON job" 
+  });
+}
+*/
+
+// This file should be deleted after successful deployment
+// For now, we're exporting a dummy handler to avoid syntax errors
+export default function handler(req, res) {
+  res.status(410).json({ error: "This endpoint has been moved to the App Router" });
+}
