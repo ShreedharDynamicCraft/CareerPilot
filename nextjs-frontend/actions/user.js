@@ -77,20 +77,31 @@ export async function getUserOnboardingStatus() {
     });
 
     if (!user) {
+      if (!clerkClient || !clerkClient.users || !clerkClient.users.getUser) {
+        throw new Error("Clerk client is not properly initialized");
+      }
       const clerkUser = await clerkClient.users.getUser(userId);
       
-      try {
-        user = await db.user.create({
-          data: {
-            clerkId: userId,
-            email: clerkUser.emailAddresses[0]?.emailAddress || '',
-            name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-            onboardingCompleted: false,
-          },
-        });
-      } catch (error) {
-        console.error("Error creating user:", error);
-        throw new Error("Failed to create user");
+      // Check if a user with the same email already exists
+      const existingUser = await db.user.findUnique({
+        where: { email: clerkUser.emailAddresses[0]?.emailAddress || '' },
+      });
+      if (existingUser) {
+        user = existingUser;
+      } else {
+        try {
+          user = await db.user.create({
+            data: {
+              clerkId: userId,
+              email: clerkUser.emailAddresses[0]?.emailAddress || '',
+              name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+              onboardingCompleted: false,
+            },
+          });
+        } catch (error) {
+          console.error("Error creating user:", error);
+          throw new Error("Failed to create user");
+        }
       }
     }
 
@@ -103,44 +114,49 @@ export async function getUserOnboardingStatus() {
   }
 }
 
-
-
-
 export async function getUser() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
- 
-try {
-const user = await db.user.findUnique({
-where: { clerkId: userId },
-select : {
-  id: true,
-  name: true,
-  email: true,
-  industry: true,
-  experience: true,
-  skills: true,
-  bio: true,
-  onboardingCompleted: true,
+  try {
+    const user = await db.user.findUnique({
+      where: { clerkId: userId },
+      select : {
+        id: true,
+        name: true,
+        email: true,
+        industry: true,
+        experience: true,
+        skills: true,
+        bio: true,
+        onboardingCompleted: true,
+      }
+    });
 
-}
-});
+    if (!user) {
+      if (!clerkClient || !clerkClient.users || !clerkClient.users.getUser) {
+        throw new Error("Clerk client is not properly initialized");
+      }
+      const clerkUser = await clerkClient.users.getUser(userId);
+      // Check if a user with the same email already exists
+      const existingUser = await db.user.findUnique({
+        where: { email: clerkUser.emailAddresses[0]?.emailAddress },
+      });
+      if (existingUser) {
+        return existingUser;
+      }
+      return {
+        onboardingCompleted: false,
+        name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+        email: clerkUser.emailAddresses[0]?.emailAddress,
+        imageUrl: clerkUser.imageUrl
+      };
+    }
 
-if (!user) {
-  const clerkUser = await clerkClient.users.getUser(userId);
-  return {
-    onboardingCompleted: false,
-    name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-    email: clerkUser.emailAddresses[0]?.emailAddress,
-    imageUrl: clerkUser.imageUrl
-  };
-}
-
-return user;
-} catch (error) {
-console.error("Error fetching user:", error);
-throw new Error("Failed to fetch user data");
-}
+    return user;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    throw new Error("Failed to fetch user data");
+  }
 }
 
