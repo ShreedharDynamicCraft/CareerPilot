@@ -1,0 +1,6 @@
+# Ignore dev/build scripts and configs
+scripts/
+eslint.config.mjs
+package.json.bak
+build-setup.js
+pages/api/cron/update-industries.js.bak 
