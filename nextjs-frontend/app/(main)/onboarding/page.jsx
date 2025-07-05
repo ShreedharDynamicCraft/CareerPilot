@@ -23,11 +23,20 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
+      // Validate form data
+      if (!formData.industry || !formData.experience || !formData.skills) {
+        throw new Error("Please fill in all required fields");
+      }
+
       // Convert skills string to array
       const skillsArray = formData.skills
         .split(",")
         .map((skill) => skill.trim())
         .filter(Boolean);
+
+      if (skillsArray.length === 0) {
+        throw new Error("Please enter at least one skill");
+      }
 
       await updateUser({
         ...formData,
@@ -38,6 +47,7 @@ export default function OnboardingPage() {
       toast.success("Profile updated successfully!");
       router.push("/dashboard");
     } catch (error) {
+      console.error("Onboarding error:", error);
       toast.error(error.message || "Failed to update profile");
     } finally {
       setLoading(false);
