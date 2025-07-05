@@ -2,8 +2,21 @@
 
 [![CareerPilot Demo](https://github.com/ShreedharDynamicCraft/CareerPilot/raw/main/Docs%20and%20media/images/Job_Portal.png)](https://www.loom.com/share/541a720881314c46b7b0e4486944549e?sid=4edbc13e-3424-40cb-8bf6-973582716a6d)
 
-## 📹 Video Demo
+## 🌐 Live Demo Links
+
+### Frontend Application
+**Frontend Hosted Link:** https://career-pilot-gohj.vercel.app
+
+### Backend API
+**Backend Hosted Link:** https://careerpilot-jm7u.onrender.com
+
+## 📹 Video Demonstrations
+
+### Main Project Demo
 [Watch the full demonstration](https://www.loom.com/share/541a720881314c46b7b0e4486944549e?sid=4edbc13e-3424-40cb-8bf6-973582716a6d)
+
+### Working Explanation Video
+[Watch the working explanation](https://www.loom.com/share/8b15e49355cf476e9960ceb2bdb846c1)
 
 ## 🚀 Project Overview
 CareerPilot is an AI-powered career guidance platform designed to help job seekers navigate their professional journey with personalized tools and insights. The platform combines modern frontend technologies with advanced backend AI services to provide a comprehensive career development experience.
