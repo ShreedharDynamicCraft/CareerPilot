@@ -488,7 +488,7 @@ const ResumeAnalyzeResult = ({ textAnalysis, jobPrediction, onBack }) => {
 
           {/* Analysis Feedback Sections */}
           <AnimatePresence>
-            {(textAnalysis.analysis || []).map((item, index) => (
+            {Array.isArray(textAnalysis.analysis) && textAnalysis.analysis.map((item, index) => (
               <motion.div
                 key={index}
                 className="bg-purple-50 p-6 rounded-xl shadow-md border border-purple-200"

@@ -150,7 +150,7 @@ const ResumeAnalyzer = () => {
       // ]);
      
 
-      confirm.setJobPrediction("havibg a losts od issye" ).setIsDragging(false).setFile(null).setAnalyzed(false).setTextAnalysis(null).setStep(1);
+      // Debug line removed - was causing error
 
 
 
