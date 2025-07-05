@@ -8,8 +8,8 @@ export default clerkMiddleware((auth, req) => {
 
 export const config = {
   matcher: [
-    // You can specify matchers here if you want to run middleware on specific routes
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
+    // Exclude health check and debug routes from authentication
+    "/((?!_next|api/health|api/debug|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(?!/health|/debug)(.*)",
   ],
 };
