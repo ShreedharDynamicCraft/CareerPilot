@@ -81,28 +81,25 @@ export async function getUserOnboardingStatus() {
         throw new Error("Clerk client is not properly initialized");
       }
       const clerkUser = await clerkClient.users.getUser(userId);
+      const email = clerkUser.emailAddresses[0]?.emailAddress;
       
-      // Check if a user with the same email already exists
-      const existingUser = await db.user.findUnique({
-        where: { email: clerkUser.emailAddresses[0]?.emailAddress || '' },
-      });
-      if (existingUser) {
-        user = existingUser;
-      } else {
-        try {
-          user = await db.user.create({
-            data: {
-              clerkId: userId,
-              email: clerkUser.emailAddresses[0]?.emailAddress || '',
-              name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-              onboardingCompleted: false,
-            },
-          });
-        } catch (error) {
-          console.error("Error creating user:", error);
-          throw new Error("Failed to create user");
-        }
+      if (!email) {
+        throw new Error("User email not found");
       }
+
+      // Use upsert to handle both creation and existing user cases
+      user = await db.user.upsert({
+        where: { email: email },
+        update: {
+          clerkId: userId, // Update clerkId if user exists but clerkId is different
+        },
+        create: {
+          clerkId: userId,
+          email: email,
+          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+          onboardingCompleted: false,
+        },
+      });
     }
 
     return {
@@ -119,7 +116,7 @@ export async function getUser() {
   if (!userId) throw new Error("Unauthorized");
 
   try {
-    const user = await db.user.findUnique({
+    let user = await db.user.findUnique({
       where: { clerkId: userId },
       select : {
         id: true,
@@ -138,19 +135,35 @@ export async function getUser() {
         throw new Error("Clerk client is not properly initialized");
       }
       const clerkUser = await clerkClient.users.getUser(userId);
-      // Check if a user with the same email already exists
-      const existingUser = await db.user.findUnique({
-        where: { email: clerkUser.emailAddresses[0]?.emailAddress },
-      });
-      if (existingUser) {
-        return existingUser;
+      const email = clerkUser.emailAddresses[0]?.emailAddress;
+      
+      if (!email) {
+        throw new Error("User email not found");
       }
-      return {
-        onboardingCompleted: false,
-        name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-        email: clerkUser.emailAddresses[0]?.emailAddress,
-        imageUrl: clerkUser.imageUrl
-      };
+
+      // Use upsert to handle both creation and existing user cases
+      user = await db.user.upsert({
+        where: { email: email },
+        update: {
+          clerkId: userId, // Update clerkId if user exists but clerkId is different
+        },
+        create: {
+          clerkId: userId,
+          email: email,
+          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+          onboardingCompleted: false,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          industry: true,
+          experience: true,
+          skills: true,
+          bio: true,
+          onboardingCompleted: true,
+        }
+      });
     }
 
     return user;

@@ -9,29 +9,30 @@ export const checkUser = async () => {
   }
 
   try {
-    const loggedInUser = await db.user.findUnique({
-      where: {
-        clerkId: user.id,
-      },
-    });
-
-    if (loggedInUser) {
-      return loggedInUser;
+    const email = user.emailAddresses[0]?.emailAddress;
+    
+    if (!email) {
+      console.error("User email not found");
+      return null;
     }
 
-    const name = `${user.firstName} ${user.lastName}`;
-
-    const newUser = await db.user.create({
-      data: {
+    // Use upsert to handle both creation and existing user cases
+    const loggedInUser = await db.user.upsert({
+      where: { email: email },
+      update: {
+        clerkId: user.id, // Update clerkId if user exists but clerkId is different
+      },
+      create: {
         clerkId: user.id,
-        name,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
         imageUrl: user.imageUrl,
-        email: user.emailAddresses[0].emailAddress,
+        email: email,
       },
     });
 
-    return newUser;
+    return loggedInUser;
   } catch (error) {
     console.log(error.message);
+    return null;
   }
 };
