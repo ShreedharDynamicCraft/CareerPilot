@@ -1,10 +1,10 @@
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export function middleware(request) {
-  // Clerk authentication removed due to Edge runtime incompatibility.
-  // Add simple rewrites/redirects here if needed in the future.
+export default clerkMiddleware((auth, req) => {
+  // Add any custom middleware logic here if needed
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
