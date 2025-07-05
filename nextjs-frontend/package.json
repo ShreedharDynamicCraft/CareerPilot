@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "fix-deps": "node scripts/update-dependencies.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.8",
