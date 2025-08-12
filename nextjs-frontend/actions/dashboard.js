@@ -72,7 +72,6 @@ export async function getIndustryInsights() {
     const industryInsight = await db.industryInsight.create({
       data: {
         industry: user.industry,
-        userId: user.id,
         ...insights,
         nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
@@ -110,9 +109,6 @@ export async function refreshIndustryInsights(industry, insightId) {
         nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
-
-    // Revalidate the dashboard page to reflect new data
-    revalidatePath("/dashboard");
 
     return updatedInsight;
   } catch (error) {

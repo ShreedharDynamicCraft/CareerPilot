@@ -15,52 +15,101 @@ export async function updateUser(data) {
 
   if (!user) throw new Error("User not found");
 
+  console.log("UpdateUser called with data:", data);
+
   try {
-    // Start a transaction to handle both operations
-    const result = await db.$transaction(
-      async (tx) => {
-        // First check if industry exists
-        let industryInsight = await tx.industryInsight.findUnique({
-          where: {
-            industry: data.industry,
-          },
-        });
+    // Handle industry creation first, separately from user update
+    if (data.industry) {
+      console.log("Processing industry:", data.industry);
+      
+      // Check if industry insight exists
+      let industryInsight = await db.industryInsight.findUnique({
+        where: {
+          industry: data.industry,
+        },
+      });
 
-        // If industry doesn't exist, create it with default values
-        if (!industryInsight) {
-          const insights = await generateAIInsights(data.industry);
-
-          industryInsight = await tx.industryInsight.create({
+      // Create industry insight if it doesn't exist
+      if (!industryInsight) {
+        console.log("Creating new industry insight for:", data.industry);
+        
+        try {
+          // Create a basic industry insight
+          industryInsight = await db.industryInsight.create({
             data: {
               industry: data.industry,
-              ...insights,
+              salaryRanges: [
+                { role: "Entry Level", min: 300000, max: 600000, median: 450000, location: "Bangalore" },
+                { role: "Mid Level", min: 600000, max: 1200000, median: 900000, location: "Mumbai" },
+                { role: "Senior Level", min: 1200000, max: 2500000, median: 1800000, location: "Delhi NCR" },
+              ],
+              growthRate: 8.5,
+              demandLevel: "High",
+              topSkills: ["Communication", "Problem Solving", "Technical Skills", "Leadership"],
+              marketOutlook: "Positive",
+              keyTrends: ["Digital Transformation", "Remote Work", "Automation", "AI Integration"],
+              recommendedSkills: ["Digital Literacy", "Data Analysis", "Project Management", "Adaptability"],
               nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             },
           });
+          console.log("Created basic industry insight successfully");
+        } catch (createError) {
+          console.error("Failed to create industry insight:", createError);
+          // If we can't create the industry insight, proceed without industry
+          data = { ...data };
+          delete data.industry;
         }
-
-        // Now update the user
-        const updatedUser = await tx.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            industry: data.industry,
-            experience: data.experience,
-            bio: data.bio,
-            skills: data.skills,
-          },
-        });
-
-        return { updatedUser, industryInsight };
-      },
-      {
-        timeout: 10000, // default: 5000
       }
-    );
+    }
 
+    // Now update the user in a single operation
+    const updateData = {
+      experience: data.experience,
+      bio: data.bio,
+      skills: data.skills,
+      onboardingCompleted: data.onboardingCompleted !== undefined ? data.onboardingCompleted : user.onboardingCompleted,
+    };
+
+    // Only add industry if we successfully have an insight for it
+    if (data.industry) {
+      updateData.industry = data.industry;
+    }
+
+    console.log("Updating user with data:", updateData);
+    
+    const updatedUser = await db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: updateData,
+    });
+
+    console.log("User updated successfully");
     revalidatePath("/");
-    return result.updatedUser;
+    
+    // Try to enhance with AI data asynchronously after successful update
+    if (data.industry) {
+      generateAIInsights(data.industry)
+        .then(async (insights) => {
+          try {
+            await db.industryInsight.update({
+              where: { industry: data.industry },
+              data: {
+                ...insights,
+                nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              },
+            });
+            console.log("Enhanced industry insight with AI data");
+          } catch (updateError) {
+            console.log("Industry insight already up to date or couldn't be enhanced:", updateError.message);
+          }
+        })
+        .catch((error) => {
+          console.log("Failed to enhance with AI data, keeping basic data:", error.message);
+        });
+    }
+    
+    return updatedUser;
   } catch (error) {
     console.error("Error updating user and industry:", error);
     console.error("Error details:", {

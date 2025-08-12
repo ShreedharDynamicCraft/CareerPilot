@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { generateCoverLetter, generateJobDescriptionFromResume } from "@/actions/cover-letter";
+import { generateCoverLetter } from "@/actions/cover-letter";
 import useFetch from "@/hooks/use-fetch";
 import { coverLetterSchema } from "@/app/lib/schema";
 import { useRouter } from "next/navigation";
@@ -48,12 +48,6 @@ export default function CoverLetterGenerator() {
     data: generatedLetter,
   } = useFetch(generateCoverLetter);
 
-  const {
-    loading: generatingDescription,
-    fn: generateDescriptionFn,
-    data: generatedDescription,
-  } = useFetch(generateJobDescriptionFromResume);
-
   useEffect(() => {
     if (generatedLetter) {
       toast.success("Cover letter generated successfully!");
@@ -63,13 +57,6 @@ export default function CoverLetterGenerator() {
       setDescriptionSource("manual");
     }
   }, [generatedLetter, router, reset]);
-
-  useEffect(() => {
-    if (generatedDescription) {
-      setValue("jobDescription", generatedDescription);
-      toast.success("Job description generated from resume!");
-    }
-  }, [generatedDescription, setValue]);
 
   const onSubmit = async (data) => {
     try {
@@ -85,9 +72,27 @@ export default function CoverLetterGenerator() {
       setResumeFile(file);
       toast.info("Resume uploaded, generating job description...");
       try {
-        await generateDescriptionFn({ resumeFile: file }); // Pass as an object
+        // Create FormData and append the file
+        const formData = new FormData();
+        formData.append('resumeFile', file);
+        
+        // Use fetch to call our API endpoint
+        const response = await fetch('/api/generate-job-description', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setValue("jobDescription", data.jobDescription);
+          toast.success("Job description generated from resume!");
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to generate job description");
+        }
       } catch (error) {
         toast.error("Failed to generate job description from resume");
+        console.error("Resume upload error:", error);
       }
     } else {
       toast.error("Please upload a PDF file");
@@ -214,20 +219,16 @@ export default function CoverLetterGenerator() {
                   type="file"
                   accept="application/pdf"
                   onChange={handleResumeUpload}
-                  disabled={generatingDescription}
                 />
                 {resumeFile && (
                   <p className="text-sm text-green-500">{resumeFile.name} uploaded</p>
-                )}
-                {generatingDescription && (
-                  <p className="text-sm text-blue-500">Generating job description...</p>
                 )}
               </div>
             )}
             <div className="flex justify-end">
               <Button
                 type="submit"
-                disabled={generatingLetter || generatingDescription || (descriptionSource === "resume" && !resumeFile)}
+                disabled={generatingLetter || (descriptionSource === "resume" && !resumeFile)}
                 className="px-5 py-2 text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 ease-in-out"
               >
                 {generatingLetter ? (

@@ -9,7 +9,7 @@ import { Tooltip } from "react-tooltip";
 const ResumeAnalyzeResult = lazy(() => import("./_component/ResumeAnalyzeResult"));
 
 const ResumeAnalyzer = () => {
-  // State management
+  // State management 
   const [file, setFile] = useState(null);
   const [analyzed, setAnalyzed] = useState(false);
   const [uploading, setUploading] = useState(false);

@@ -3,56 +3,9 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf"; // Use legacy build for Node.js compatibility
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-export async function generateJobDescriptionFromResume(resumeFile) {
-  try {
-    // Validate resumeFile
-    if (!(resumeFile instanceof File)) {
-      throw new Error("Invalid resume file: Expected a File object");
-    }
-
-    // Convert File to Uint8Array for pdfjs-dist
-    const arrayBuffer = await resumeFile.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    console.log("PDF buffer length:", uint8Array.length); // Debug log
-
-    // Extract text from PDF
-    const pdf = await getDocument({ data: uint8Array }).promise;
-    let resumeText = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      resumeText += content.items.map(item => item.str).join(" ") + "\n";
-    }
-    console.log("Extracted resume text:", resumeText.substring(0, 100)); // Debug log
-
-    // Prompt Gemini with the extracted text
-    const prompt = `
-      Based on the following resume content, generate a concise job description (150-200 words) that aligns with the candidate's skills, experience, and career goals:
-      
-      Resume Content:
-      ${resumeText}
-      
-      Instructions:
-      1. Summarize the candidate's key skills and experience.
-      2. Create a job description for a role they are well-suited for.
-      3. Use professional language suitable for inclusion in a cover letter.
-      4. Ensure the description reflects the candidate’s background and aspirations.
-      
-      Output the job description as plain text.
-    `;
-
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
-  } catch (error) {
-    console.error("Error generating job description from resume:", error.message);
-    throw new Error("Failed to generate job description from resume");
-  }
-}
 
 export async function generateCoverLetter(data) {
   const { userId } = await auth();
@@ -106,7 +59,7 @@ export async function generateCoverLetter(data) {
     `,
     coldEmail: `
       Write a cold email cover letter for an unsolicited job application to ${data.companyName} for a potential ${data.jobTitle} role.
-      Pitch the candidate’s value to the company, addressing a specific need or opportunity inferred from the job description.
+      Pitch the candidate's value to the company, addressing a specific need or opportunity inferred from the job description.
       Use a bold, proactive, and concise tone.
     `,
   };
@@ -141,7 +94,7 @@ export async function generateCoverLetter(data) {
     1. ${letterTypeInstruction}
     2. Incorporate details from the job description to show deep understanding of the role.
     3. Use a tone that matches the letter type (e.g., confident for job applications, eager for internships, warm for networking).
-    4. Highlight 1-2 specific achievements from the candidate’s background that directly relate to the job description.
+    4. Highlight 1-2 specific achievements from the candidate's background that directly relate to the job description.
     5. Keep the length concise, targeting ${wordLimit} words—short letters should be brief and impactful, medium letters balanced, and detailed letters comprehensive yet focused.
     6. Format the letter in markdown with proper business letter structure (e.g., date, greeting, body, closing).
     7. Avoid generic phrases; make it unique to the candidate and job.

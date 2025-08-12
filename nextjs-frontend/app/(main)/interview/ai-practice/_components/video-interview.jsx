@@ -49,8 +49,14 @@ export default function VideoInterview() {
   // Cleanup function
   useEffect(() => {
     return () => {
+      // Stop video streams
       if (userStreamRef.current) {
         userStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      // Stop any ongoing speech synthesis
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
       }
     };
   }, []);
@@ -159,6 +165,12 @@ export default function VideoInterview() {
 
   // End call
   const endCall = () => {
+    // Stop any ongoing speech synthesis
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    
+    // Stop video streams
     if (userStreamRef.current) {
       userStreamRef.current.getTracks().forEach(track => track.stop());
     }
@@ -169,7 +181,13 @@ export default function VideoInterview() {
       aiVideoRef.current.pause();
       aiVideoRef.current.src = "";
     }
+    
+    // Reset states
     setIsCallActive(false);
+    setIsAiSpeaking(false);
+    setIsAnalyzing(false);
+    setCurrentQuestion(null);
+    
     toast({
       title: "Call Ended",
       description: "Your interview session has ended."
