@@ -10,6 +10,7 @@ import {
   Search,
   Target,
   Zap,
+  ListTodo,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -29,7 +30,7 @@ export default function LandingPage() {
               <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
                 <Link href="/dashboard">Get Started</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-blue-700">
+              <Button asChild size="lg" variant="secondary" className="bg-blue-700 text-white border-white hover:bg-blue-800">
                 <Link href="#features">Learn More</Link>
               </Button>
             </div>
@@ -50,9 +51,13 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                 <p className="text-gray-600 mb-4">{feature.description}</p>
-                <Link href={feature.link} className="text-blue-600 font-medium inline-flex items-center">
+                {/* <Link href={feature.link} className="text-blue-600 font-medium inline-flex items-center">
                   Explore <ArrowRight className="ml-1 w-4 h-4" />
-                </Link>
+                </Link> */}
+                  {/* <Link href={"/"} className="text-blue-600 font-medium inline-flex items-center">
+                    Sign up to explore  <ArrowRight className="ml-1 w-4 h-4" />
+                </Link> */}
+             
               </div>
             ))}
           </div>
@@ -103,22 +108,22 @@ export default function LandingPage() {
               <h4 className="text-lg font-semibold text-white mb-4">Features</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="#" className="hover:text-white">
+                  <Link href="/dashboard" className="hover:text-white">
                     Career Advice
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white">
+                  <Link href="/cover-letter" className="hover:text-white">
                     Resume Builder
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white">
+                  <Link href="/interview" className="hover:text-white">
                     Interview Prep
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white">
+                  <Link href="/job-search" className="hover:text-white">
                     Job Search
                   </Link>
                 </li>
@@ -153,7 +158,7 @@ export default function LandingPage() {
               <h4 className="text-lg font-semibold text-white mb-4">Company</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="#" className="hover:text-white">
+                  <Link href="" className="hover:text-white">
                     About Us
                   </Link>
                 </li>
@@ -244,6 +249,18 @@ const features = [
     description: "Students and freshers can discover relevant internships to kickstart their professional journey.",
     icon: Briefcase,
     link: "/dashboard/internships",
+  },
+  {
+    title: "Todo List",
+    description: "Organize your career tasks, track job applications, and stay productive with a personal todo list.",
+    icon: ListTodo,
+    link: "/todo",
+  },
+  {
+    title: "Code Review (Personal Code)",
+    description: "Get instant AI-powered feedback on your code for best practices and improvements.",
+    icon: BarChart3,
+    link: "https://the-empathetic-code-reviewer-darwix.vercel.app/",
   },
 ]
 

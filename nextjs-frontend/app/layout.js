@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
         <body className={`antialiased ${inter.className}`} suppressHydrationWarning>
           <Header />
           <main className="pt-16"> {/* Adjust pt-16 based on Header height */}
-            {children}
+            {children} 
           </main>
         </body>
       </html>

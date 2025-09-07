@@ -148,6 +148,7 @@ export default async function Header() {
       </Link>
     </DropdownMenuItem>
 
+  
     <DropdownMenuItem asChild>
       <Link href="/cover-letter" className="flex items-center gap-3 hover:bg-indigo-50 p-3 rounded-lg group transition-all duration-300 hover:shadow-md">
         <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
@@ -195,9 +196,26 @@ export default async function Header() {
         </div>
       </Link>
     </DropdownMenuItem>
+
+
+  <DropdownMenuItem asChild>
+      <Link href="https://the-empathetic-code-reviewer-darwix.vercel.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:bg-teal-50 p-3 rounded-lg group transition-all duration-300 hover:shadow-md">
+        <div className="p-2 bg-teal-100 text-teal-600 rounded-lg group-hover:bg-teal-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+          <BarChart3 className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+        </div>
+        <div className="flex flex-col transition-all duration-300 group-hover:translate-x-1">
+          <span className="font-medium text-gray-800 group-hover:text-teal-700">Code Review Platform</span>
+          <span className="text-xs text-gray-500 group-hover:text-teal-500">AI-powered code review</span>
+        </div>
+      </Link>
+    </DropdownMenuItem>
+
+
   </DropdownMenuContent>
 </DropdownMenu>
         
+
+
 
 
 <Link href="/dashboard" className="relative group">
