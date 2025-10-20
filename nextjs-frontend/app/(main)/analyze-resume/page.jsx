@@ -56,19 +56,19 @@ export default function AnalyzeResumePage() {
       // Use Promise.all for concurrent API requests
       try {
         const [analysisRes, skillsRes, predictionRes] = await Promise.all([
-          axios.post("http://127.0.0.1:8000/upload_resume/", formData, {
+          axios.post("https://careerpilot-jm7u.onrender.com/upload_resume/", formData, {
             timeout: 30000, // 30 second timeout
             headers: {
               "Content-Type": "multipart/form-data",
             },
           }),
-          axios.post("http://127.0.0.1:8000/skills/", formData, {
+          axios.post("https://careerpilot-jm7u.onrender.com/skills/", formData, {
             timeout: 15000, // 15 second timeout
             headers: {
               "Content-Type": "multipart/form-data",
             },
           }),
-          axios.post("http://127.0.0.1:8000/predict_job_role/", formData, {
+          axios.post("https://careerpilot-jm7u.onrender.com/predict_job_role/", formData, {
             timeout: 15000, // 15 second timeout
             headers: {
               "Content-Type": "multipart/form-data",
