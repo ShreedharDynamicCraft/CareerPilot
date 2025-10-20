@@ -46,7 +46,7 @@ export async function POST(req) {
     const score = Math.round((correctCount / questions.length) * 100);
 
     // Generate analysis using Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const analysisPrompt = `You are an expert at analyzing test results and providing constructive feedback.
     Analyze the following test results and provide a detailed report in JSON format:
     

@@ -7,7 +7,7 @@ from os import getenv
 
 # Configure Google API key
 genai.configure(api_key=getenv("GOOGLE_API_KEY"))
-client = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.GenerativeModel("models/gemini-2.5-flash")
 
 def extract_text_from_pdf(file):
     """Extract text from PDF using pdfplumber"""

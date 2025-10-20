@@ -29,7 +29,7 @@ export async function POST(req) {
       );
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `Generate ${questionCount} interview questions for the following skills: ${skills.join(", ")}. 
     Difficulty level: ${difficulty}

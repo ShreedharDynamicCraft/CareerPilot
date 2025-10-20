@@ -21,7 +21,7 @@ from typing import Dict
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
-client = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.GenerativeModel("models/gemini-2.5-flash")
 
 app = FastAPI()
 app.add_middleware(

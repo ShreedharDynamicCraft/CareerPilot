@@ -50,7 +50,7 @@ export async function POST(req) {
         Return ONLY a comma-separated list of skills, no other text.
       `;
       
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const extractionResult = await model.generateContent(extractionPrompt);
       const extractedSkillsText = extractionResult.response.text().trim();
       
@@ -102,7 +102,7 @@ export async function POST(req) {
       IMPORTANT: Return ONLY the JSON object, no markdown formatting or code blocks.
     `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
