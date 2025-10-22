@@ -67,8 +67,10 @@ async def upload_resume(file: UploadFile = File(...)):
         extracted_text = extract_text_from_pdf(file_stream)
     elif file_extension == "docx":
         extracted_text = extract_text_from_docx(file_stream)
+    elif file_extension == "txt":
+        extracted_text = file_content.decode("utf-8", errors="ignore")
     else:
-        raise HTTPException(status_code=400, detail="Unsupported file format. Use PDF or DOCX.")
+        raise HTTPException(status_code=400, detail="Unsupported file format. Use PDF, DOCX, or TXT.")
 
     try:
         analysis_result = analyze_resume_with_ai(extracted_text)
@@ -84,6 +86,7 @@ async def upload_resume(file: UploadFile = File(...)):
 
     return {
         "filename": file.filename,
+        "extracted_text": extracted_text,
         "analysis": analysis_result or {},
         "project_analysis": project_analysis or {}
     }
